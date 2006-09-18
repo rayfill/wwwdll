@@ -6,6 +6,7 @@ ThreadJoin@4
 ThreadClose@4
 HTTPCreateContext@16
 HTTPGetContentsSync@20
+HTTPGetURL@12
 HTTPGetLastModified@12
 HTTPGetResponseCode@4
 HTTPGetCRC32@4

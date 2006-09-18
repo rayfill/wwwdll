@@ -1,11 +1,11 @@
-#include <wwwdll.h>
-#include <filter.hpp>
+#include "filter.hpp"
 #include <net/HTTPClient.hpp>
 #include <util/CRC.hpp>
 #include <Thread/ThreadPool.hpp>
 #include <text/regex/RegexCompile.hpp>
 #include <cassert>
 #include <fstream>
+#include "wwwdll.h"
 
 typedef ThreadPool<>::RerunnableThread thread_t;
 class HTTPContext : public Runnable
@@ -39,8 +39,9 @@ private:
 			client.setTimeout(timeout);
 
 			result = client.getResource(url.c_str());
+
 		}
-		catch (std::exception& e)
+		catch (std::exception& /*e*/)
 		{
 			return false;
 		}
@@ -125,23 +126,30 @@ public:
 
 	virtual unsigned run() throw(ThreadException)
 	{
-		bool result = this->getContents();
+		bool result = false;
+		try
+		{
+			result = this->getContents();
 
-		if (hWnd != NULL)
-			PostMessage(hWnd, message,
-						static_cast<WPARAM>(result),
-						reinterpret_cast<LPARAM>(this->getThreadContext()));
-
+			if (hWnd != NULL)
+				PostMessage(hWnd, message,
+							static_cast<WPARAM>(result),
+							reinterpret_cast<LPARAM>(this->getThreadContext()));
+		}
+		catch(std::exception& e)
+		{
+			throw ThreadException(e.what());
+		}
 		return result;
 	}
 };
 
-__stdcall void* ThreadCreate()
+void* __stdcall ThreadCreate()
 {
 	return new thread_t;
 }
 
-__stdcall void ThreadStart(void* context,
+void __stdcall ThreadStart(void* context,
 						   void* httpContext,
 						   HWND hWnd,
 						   const unsigned int message)
@@ -156,14 +164,14 @@ __stdcall void ThreadStart(void* context,
 	thread->start(httpObject);
 }
 
-__stdcall long ThreadJoin(void* threadContext)
+long __stdcall ThreadJoin(void* threadContext)
 {
 	thread_t* thread = reinterpret_cast<thread_t*>(threadContext);
 
 	return thread->join();
 }
 
-__stdcall void ThreadClose(void* threadContext)
+void __stdcall ThreadClose(void* threadContext)
 {
 	thread_t* thread = reinterpret_cast<thread_t*>(threadContext);
 
@@ -172,8 +180,7 @@ __stdcall void ThreadClose(void* threadContext)
 	delete thread;
 }
 
-
-__stdcall void* HTTPCreateContext(const char* url,
+void* __stdcall HTTPCreateContext(const char* url,
 								  const char* cookie,
 								  const char* userAgent,
 								  const long timeout)
@@ -189,7 +196,7 @@ __stdcall void* HTTPCreateContext(const char* url,
 	return target;
 }
 
-__stdcall void* HTTPGetContentsSync(const char* url,
+void* __stdcall HTTPGetContentsSync(const char* url,
 									const char* cookie,
 									const char* userAgent,
 									const long timeout,
@@ -210,7 +217,26 @@ __stdcall void* HTTPGetContentsSync(const char* url,
 	return target;
 }
 
-__stdcall long HTTPGetLastModified(void* httpContext,
+int __stdcall HTTPGetURL(void* httpContext, char* url, const int length)
+{
+	assert(url != NULL);
+	assert(length >= 0);
+
+	HTTPContext* target =
+		reinterpret_cast<HTTPContext*>(httpContext);
+
+	std::string targetUrl = target->getURL();
+	if (targetUrl.length() <= static_cast<size_t>(length))
+	{
+		std::string::iterator itor = targetUrl.begin();
+		while (itor != targetUrl.end())
+			*url++ = *itor++;
+	}
+
+	return static_cast<int>(targetUrl.length());
+}
+
+long __stdcall HTTPGetLastModified(void* httpContext,
 								   char* buffer, const int length)
 {
 	HTTPContext* target =
@@ -219,16 +245,16 @@ __stdcall long HTTPGetLastModified(void* httpContext,
 	const std::string lastModified = target->getLastModified();
 	if (buffer == NULL ||
 		lastModified.size() > static_cast<unsigned int>(length))
-		return lastModified.size();
+		return static_cast<long>(lastModified.size());
 
 	std::string::const_iterator itor = lastModified.begin();
 	while (itor != lastModified.end())
 		*buffer++ = *itor++;
 
-	return lastModified.size();
+	return static_cast<long>(lastModified.size());
 }
 
-__stdcall long HTTPGetResponseCode(void* httpContext)
+long __stdcall HTTPGetResponseCode(void* httpContext)
 {
 	HTTPContext* target =
 		reinterpret_cast<HTTPContext*>(httpContext);
@@ -236,7 +262,7 @@ __stdcall long HTTPGetResponseCode(void* httpContext)
 	return target->getResponseCode();
 }
 
-__stdcall long HTTPGetCRC32(void* httpContext)
+long __stdcall HTTPGetCRC32(void* httpContext)
 {
 	HTTPContext* target =
 		reinterpret_cast<HTTPContext*>(httpContext);
@@ -244,7 +270,7 @@ __stdcall long HTTPGetCRC32(void* httpContext)
 	return target->getCRC32();
 }
 
-__stdcall long HTTPGetFilteredCRC32(void* httpContext,
+long __stdcall HTTPGetFilteredCRC32(void* httpContext,
 									void* managerContext)
 {
 	HTTPContext* target =
@@ -266,7 +292,7 @@ __stdcall long HTTPGetFilteredCRC32(void* httpContext,
 	return crc32;
 }
 
-__stdcall long HTTPGetCRC32FromString(const char* buffer)
+long __stdcall HTTPGetCRC32FromString(const char* buffer)
 {
 	CRC32 digester;
 
@@ -275,7 +301,7 @@ __stdcall long HTTPGetCRC32FromString(const char* buffer)
 	return static_cast<long>(digester.getDigest());
 }
 
-__stdcall long HTTPContentsSave(void* httpContext, const char* filename)
+long __stdcall HTTPContentsSave(void* httpContext, const char* filename)
 {
 	HTTPContext* target =
 		reinterpret_cast<HTTPContext*>(httpContext);
@@ -290,15 +316,15 @@ __stdcall long HTTPContentsSave(void* httpContext, const char* filename)
 	return 1;
 }
 
-__stdcall long HTTPGetContentsLength(void* httpContext)
+long __stdcall HTTPGetContentsLength(void* httpContext)
 {
 	HTTPContext* target =
 		reinterpret_cast<HTTPContext*>(httpContext);
 
-	return target->getContentsString().length();
+	return static_cast<long>(target->getContentsString().length());
 }
 
-__stdcall long HTTPGetResource(void* httpContext,
+long __stdcall HTTPGetResource(void* httpContext,
 							   char* buffer,
 							   const int length)
 {
@@ -306,7 +332,7 @@ __stdcall long HTTPGetResource(void* httpContext,
 		reinterpret_cast<HTTPContext*>(httpContext);
 
 	if (buffer == NULL)
-		return target->getContentsString().length();
+		return static_cast<long>(target->getContentsString().length());
 
 	const std::string contents = target->getContentsString();
 	if (contents.length() <= static_cast<size_t>(length))
@@ -316,10 +342,10 @@ __stdcall long HTTPGetResource(void* httpContext,
 			*buffer++ = *itor++;
 	}
 
-	return contents.length();
+	return static_cast<long>(contents.length());
 }
 
-__stdcall void HTTPClose(void* httpContext)
+void __stdcall HTTPClose(void* httpContext)
 {
 	HTTPContext* target =
 		reinterpret_cast<HTTPContext*>(httpContext);
@@ -327,7 +353,7 @@ __stdcall void HTTPClose(void* httpContext)
 	delete target;
 }
 
-__stdcall void* RegexCompile(const char* pattern)
+void* __stdcall RegexCompile(const char* pattern)
 {
 	RegexCompiler<char> compiler;
 	RegexMatch<char>* matcher = NULL;
@@ -336,7 +362,7 @@ __stdcall void* RegexCompile(const char* pattern)
 		RegexMatch<char> match = compiler.compile(pattern);
 		matcher = new RegexMatch<char>(match);
 	}
-	catch (CompileError& e)
+	catch (CompileError& /*e*/)
 	{
 		return NULL;
 	}
@@ -344,7 +370,7 @@ __stdcall void* RegexCompile(const char* pattern)
 	return matcher;
 }
 
-__stdcall long RegexMatcher(void* regexContext, void* httpContext,
+long __stdcall RegexMatcher(void* regexContext, void* httpContext,
 							char* buffer, const int length,
 							const int ignoreCase)
 {
@@ -354,22 +380,22 @@ __stdcall long RegexMatcher(void* regexContext, void* httpContext,
 		reinterpret_cast<HTTPContext*>(httpContext);
 
 	std::string source = target->getContentsString();
-	if (!matcher->match(source, static_cast<bool>(ignoreCase)))
+	if (!matcher->match(source, ignoreCase != 0))
 		return 0;
 
 	const std::string matchedStr = matcher->matchedString(source);
 	if (buffer == NULL ||
 		static_cast<size_t>(length) < matchedStr.length())
-		return matchedStr.length();
+		return static_cast<long>(matchedStr.length());
 	
 	std::string::const_iterator itor = matchedStr.begin();
 	while (itor != matchedStr.end())
 		*buffer++ = *itor++;
 
-	return matchedStr.length();
+	return static_cast<long>(matchedStr.length());
 }
 
-__stdcall long RegexMatchFromString(void* regexContext,
+long __stdcall RegexMatchFromString(void* regexContext,
 									const char* targetString,
 									char* buffer,
 									const int length,
@@ -379,22 +405,22 @@ __stdcall long RegexMatchFromString(void* regexContext,
 		reinterpret_cast<RegexMatch<char>*>(regexContext);
 
 	std::string source = targetString;
-	if (!matcher->match(source, static_cast<bool>(ignoreCase)))
+	if (!matcher->match(source, ignoreCase != 0))
 		return 0;
 
 	const std::string matchedStr = matcher->matchedString(source);
 	if (buffer == NULL ||
 		static_cast<size_t>(length) < matchedStr.length())
-		return matchedStr.length();
+		return static_cast<long>(matchedStr.length());
 	
 	std::string::const_iterator itor = matchedStr.begin();
 	while (itor != matchedStr.end())
 		*buffer++ = *itor++;
 
-	return matchedStr.length();
+	return static_cast<long>(matchedStr.length());
 }
 
-__stdcall long RegexMatchedString(void* regexContext,
+long __stdcall RegexMatchedString(void* regexContext,
 								  const char* sourceString,
 								  const int groupNumber,
 								  char* buffer,
@@ -415,10 +441,10 @@ __stdcall long RegexMatchedString(void* regexContext,
 			*buffer++ = *itor++;
 	}
 
-	return result.size();
+	return static_cast<long>(result.size());
 }
 
-__stdcall void RegexTerminate(void* regexContext)
+void __stdcall RegexTerminate(void* regexContext)
 {
 	RegexMatch<char>* matcher =
 		reinterpret_cast<RegexMatch<char>*>(regexContext);
@@ -428,7 +454,7 @@ __stdcall void RegexTerminate(void* regexContext)
 
 using namespace Filter;
 
-__stdcall void* FilterManagerCreate()
+void* __stdcall FilterManagerCreate()
 {
 	FilterLoader loader("filter.txt");
 	FilterManager* manager = new FilterManager();
@@ -439,7 +465,7 @@ __stdcall void* FilterManagerCreate()
 	return manager;
 }
 
-__stdcall void* FilterGetFilters(void* managerContext, const char* url)
+void* __stdcall FilterGetFilters(void* managerContext, const char* url)
 {
 	FilterManager* manager = 
 		reinterpret_cast<FilterManager*>(managerContext);
@@ -447,7 +473,7 @@ __stdcall void* FilterGetFilters(void* managerContext, const char* url)
 	return new std::vector<Executor*>(manager->getExecutors(url));
 }
 
-__stdcall void FilterRemoveFilters(void* filterHandle)
+void __stdcall FilterRemoveFilters(void* filterHandle)
 {
 	std::vector<Executor*>* executors =
 		reinterpret_cast<std::vector<Executor*>*>(filterHandle);
@@ -455,7 +481,7 @@ __stdcall void FilterRemoveFilters(void* filterHandle)
 	delete executors;
 }
 
-__stdcall long FilterApply(void* filterHandle, char* contents)
+long __stdcall FilterApply(void* filterHandle, char* contents)
 {
 	assert(filterHandle != NULL);
 	assert(contents != NULL);
@@ -473,10 +499,10 @@ __stdcall long FilterApply(void* filterHandle, char* contents)
 	while (itor != target.end())
 		*contents++ = *itor++;
 
-	return target.length();
+	return static_cast<long>(target.length());
 }
 
-__stdcall void FilterManagerTerminate(void* managerContext)
+void __stdcall FilterManagerTerminate(void* managerContext)
 {
 	FilterManager* manager = 
 		reinterpret_cast<FilterManager*>(managerContext);
@@ -484,12 +510,12 @@ __stdcall void FilterManagerTerminate(void* managerContext)
 	delete manager;
 }
 
-__stdcall void* WWWInit()
+void* __stdcall WWWInit()
 {
 	return new SocketModule();
 }
 
-__stdcall void WWWTerminate(void* contextHandle)
+void __stdcall WWWTerminate(void* contextHandle)
 {
 	SocketModule* handle = reinterpret_cast<SocketModule*>(contextHandle);
 

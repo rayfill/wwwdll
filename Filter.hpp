@@ -2,6 +2,7 @@
 #include <map>
 #include <vector>
 #include <fstream>
+#include <cassert>
 
 namespace Filter
 {
@@ -222,6 +223,7 @@ namespace Filter
 	{
 	public:
 		enum operation {
+			undefined,
 			extract,
 			remove,
 			removeAll
@@ -405,12 +407,16 @@ namespace Filter
 
 			Executor::operation oper;
 			if (opSource.find("D") != std::string::npos)
-				oper = Executor::remove;
+			{
+				if (opSource.find("R") != std::string::npos)
+					oper = Executor::removeAll;
+				else
+					oper = Executor::remove;
+			}
 			else if (opSource.find("S") != std::string::npos)
 				oper = Executor::extract;
-			if (opSource.find("R") != std::string::npos &&
-				oper == Executor::remove)
-				oper = Executor::removeAll;
+			else
+				oper = Executor::undefined;
 
 			Executor* executor = new Executor(oper, 
 											  rule.head.c_str(),

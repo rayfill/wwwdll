@@ -73,3 +73,14 @@ void FilterClose();
 22:52 (rayfill) URLはクラスメンバから取れるからいいとして・・・ｆｉｌｔｅｒのコンテキストとかも引数で渡してやる形で行くか
 
 取りあえずHTTPGetFilteredCRC32()という形でお茶を濁してみる
+
+
+00:40 (GrandM) おわった
+00:40 (GrandM) ３０分
+00:40 (GrandM) ＯＫだね
+00:41 (rayfill) 速度差は通信速度の差か？(笑)
+00:41 (GrandM) http://www80.sakura.ne.jp/~noantica/index2.htm で GetFilterCRC32 すると０になるのぉ
+00:43 (rayfill) ふむ・・・ちょい調べてみま
+00:44 (GrandM) http://www3.to/hosikuzu/ も・・・って、www3.to か(´Д｀;)
+00:44 (rayfill) やっぱり30x系サポートしたほうがよさげだよね・・・
+00:45 (GrandM) http://www.geocities.co.jp/Playtown/3932/ で GetFilterCRC32 とまるねぇ

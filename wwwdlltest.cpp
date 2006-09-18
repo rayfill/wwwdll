@@ -1,11 +1,11 @@
 #include <string>
-#include <wwwdll.h>
 
 #ifdef DEBUGMAIN
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <text/LexicalCast.hpp>
+#include "wwwdll.h"
 
 int main(int argc, char** argv)
 {
@@ -89,15 +89,172 @@ int main(int argc, char** argv)
 
 #ifdef DEBUGWINMAIN
 #include <text/LexicalCast.hpp>
+#include <text/regex/RegexCompile.hpp>
+#include <thread/CriticalSection.hpp>
+#include "item.hpp"
+#include <map>
+#include <fstream>
+#include <stdexcept>
+#include "wwwdll.h"
 
-unsigned long crc;
-char dateBuffer[256];
-int dateLength;
-int responseCode;
+class Win32Exception : public std::runtime_error
+{
+private:
+	std::string transException(const unsigned int code,
+							   _EXCEPTION_POINTERS* /*exceptionInfo*/)
+	{
+		switch (code)
+		{
+			case EXCEPTION_ACCESS_VIOLATION:
+				return "AccessViolation";
+			case EXCEPTION_DATATYPE_MISALIGNMENT:
+				return "DataType Misalignment";
+			case EXCEPTION_BREAKPOINT:
+				return "break point";
+			case EXCEPTION_SINGLE_STEP:
+				return "single step";
+			case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+				return "array bounds exceeded";
+			case EXCEPTION_FLT_DENORMAL_OPERAND:
+				return "flt denormal operand";
+			case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+				return "flt divide by zero";
+			case EXCEPTION_FLT_INEXACT_RESULT:
+				return "flt inexact result";
+			case EXCEPTION_FLT_INVALID_OPERATION:
+				return "flt invalid operation";
+			case EXCEPTION_FLT_OVERFLOW:
+				return "flt overflow";
+			case EXCEPTION_FLT_STACK_CHECK:
+				return "flt stack check";
+			case EXCEPTION_FLT_UNDERFLOW:
+				return "flt underflow";
+			case EXCEPTION_INT_DIVIDE_BY_ZERO:
+				return "int divide by zero";
+			case EXCEPTION_INT_OVERFLOW:
+				return "int overflow";
+			case EXCEPTION_PRIV_INSTRUCTION:
+				return "priv instruction";
+			case EXCEPTION_IN_PAGE_ERROR:
+				return "in page error";
+			case EXCEPTION_ILLEGAL_INSTRUCTION:
+				return "illegal instruction";
+			case EXCEPTION_NONCONTINUABLE_EXCEPTION:
+				return "noncontinuable exception";
+			case EXCEPTION_STACK_OVERFLOW:
+				return "stack overflow";
+			case EXCEPTION_INVALID_DISPOSITION:
+				return "invalid disposition";
+			case EXCEPTION_GUARD_PAGE:
+				return "guard page";
+			case EXCEPTION_INVALID_HANDLE:
+				return "invalid handle";
+		}
+
+		return "unknown exception";
+	}
+
+public:
+	Win32Exception(const unsigned int code,
+		_EXCEPTION_POINTERS* exceptionInfo):
+			std::runtime_error(transException(code, exceptionInfo))
+	{}
+
+	virtual ~Win32Exception() throw()
+	{}
+
+};
+
+void translatorFunction(unsigned int exceptionCode,
+						_EXCEPTION_POINTERS* exceptionInfo)
+{
+	throw Win32Exception(exceptionCode, exceptionInfo);
+}
+
 void* filterManagerContext;
-void* threadContext;
-void* httpContext;
-const char url[] = "http://puchi-neko.hp.infoseek.co.jp/";
+std::map<void*, void*> contextMapper;
+std::vector<Item> items;
+
+void saveItems()
+{
+	std::ofstream ofs("url_checked.txt", std::ios::out | std::ios::trunc);
+	ofs << "check_flg	url	url_check	url_open	name"
+		"last_updated	last_visited	crc32	content_length	id"
+		<< std::endl;
+
+	for (std::vector<Item>::const_iterator itor = items.begin();
+		 itor != items.end(); ++itor)
+		ofs << itor->toString() << std::endl;
+	ofs.close();
+}
+
+std::vector<Item> loadItems()
+{
+	std::ifstream ifs("url.txt");
+	if (ifs.fail())
+		return std::vector<Item>();
+
+	char lineBuffer[4096];
+	// ヘッダ読み飛ばし
+	ifs.getline(lineBuffer, sizeof(lineBuffer));
+
+	std::vector<Item> items;
+
+	// read a check list.
+	while (!ifs.fail())
+	{
+		ifs.getline(lineBuffer, sizeof(lineBuffer));
+		Item item = Item::parse(lineBuffer);
+		if (item.url != "")
+			items.push_back(item);
+	}
+
+	return items;
+}
+
+void resetItems(std::vector<Item>& items)
+{
+	for (std::vector<Item>::iterator itor = items.begin();
+		 itor != items.end(); ++itor)
+		itor->check_flg = false;
+}
+
+std::vector<Item>::iterator find_uncheck_item()
+{
+	for (std::vector<Item>::iterator itor = items.begin();
+		 itor != items.end(); ++itor)
+		if (itor->check_flg == false)
+			return itor;
+
+	return items.end();
+}
+
+std::vector<Item>::iterator find_item_from_url(const std::string& url)
+{
+	for (std::vector<Item>::iterator itor = items.begin();
+		 itor != items.end(); ++itor)
+	{
+		if (itor->url_check == url)
+			return itor;
+	}
+
+	return items.end();
+}
+
+static int threadCount = 0;
+static int checkCount = 0;
+
+void updateCounter(HWND hWnd)
+{
+	SetWindowText(hWnd, 
+				  (std::string("thread: ") +
+				   stringCast<int>(threadCount) +
+				   std::string(", check: ") +
+				   stringCast<int>(checkCount)).c_str());
+}
+
+std::vector<void*> threadHandler;
+std::vector<void*> waitableThreads;
 
 LRESULT CALLBACK WndProc(HWND hWnd,
 						 UINT message,
@@ -107,107 +264,116 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 
 	switch (message)
 	{
-	case WM_CLOSE:
-		DestroyWindow(hWnd);
-		return 0;
+		case WM_CLOSE:
+			DestroyWindow(hWnd);
+			return 0;
 
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			break;
 
-	case WM_KEYUP:
+		case WM_KEYUP:
 		{
-			MessageBox(hWnd, "start", "", MB_OK);
-			httpContext = HTTPCreateContext(url,
-											NULL,
-											NULL,
-											300);
-		
-			ThreadStart(threadContext, httpContext, hWnd, WM_USER+1);
+			CriticalSection lock;
+			std::vector<Item>::iterator itor = find_uncheck_item();
+			if (itor != items.end() && waitableThreads.size() > 0)
+			{
+				void* threadContext = waitableThreads.back();
+				waitableThreads.pop_back();
+
+				itor->check_flg = true;
+				void* httpContext =
+					HTTPCreateContext(itor->url_check.c_str(),
+											NULL, NULL, 30);
+
+				contextMapper[threadContext] = httpContext;
+				ThreadStart(threadContext, httpContext, hWnd, WM_USER+1);
+				++threadCount;
+
+				updateCounter(hWnd);
+			}
 			break;
 		}
 
-	case WM_USER+1:
-		if (wParam != 0)
+		case WM_USER+1:
 		{
-			std::string message;
-			
-			// last modified
-			long length = HTTPGetLastModified(httpContext, NULL, 0);
-			char* buffer = new char[length+1];
-			buffer[HTTPGetLastModified(httpContext, buffer, length)] = 0;
-			message += std::string("last modified: ") + buffer + "\r\n";
-			delete[] buffer;
+			void* threadContext = reinterpret_cast<void*>(lParam);
+			void* httpContext = contextMapper[threadContext];
+			contextMapper[threadContext] = NULL;
 
-			// crc
-			message += "crc: " +
-				stringCast<long>(HTTPGetCRC32(httpContext)) +
-				"\r\n";
+			if (wParam != 0)
+			{
+				++checkCount;
+				updateCounter(hWnd);
+				char url[2048];
+				url[HTTPGetURL(httpContext, url, sizeof(url))] = 0;
 
-			// save file.
-			HTTPContentsSave(httpContext, "savedfile.html");
+				std::vector<Item>::iterator itor = find_item_from_url(url);
 
-			// filter
-			void* filter =
-				FilterGetFilters(filterManagerContext, url);
-			
-			const long contentsLength = HTTPGetContentsLength(httpContext);
-			buffer = new char[contentsLength+1];
-			buffer[HTTPGetResource(httpContext, buffer, contentsLength)] = 0;
-			const long strSize = FilterApply(filter, buffer);
-			buffer[strSize] = 0;
-			std::ofstream ofs("savefile_filterd.txt",
-							  std::ios::binary |
-							  std::ios::out |
-							  std::ios::trunc);
-			ofs << buffer;
-			ofs.close();
-			message += "crc32: " +
-				stringCast<long>(HTTPGetCRC32FromString(buffer)) + "\r\n";
+				char date[256];
+				date[HTTPGetLastModified(httpContext, date, sizeof(date))] = 0;
+				itor->last_updated = date;
+				
+				itor->crc32 = HTTPGetFilteredCRC32(httpContext,
+												   filterManagerContext);
+				
+				itor->content_length = HTTPGetContentsLength(httpContext);
+			}
 
-			delete buffer;
-			FilterRemoveFilters(filter);
-
-			// regex
-			int matchedLength = HTTPGetContentsLength(httpContext);
-			char* matchedString = new char[matchedLength + 1];
-
-			void* regexHandle = 
-				RegexCompile("<meta[ 	]+name=\"wwwc\"[ 	]+content="
-							 "\"([^\"]+)\"[ 	]*>");
-
-			matchedString[RegexMatcher(regexHandle,
-									   httpContext,
-									   matchedString,
-									   matchedLength,
-									   1)] = 0;
-			message += std::string("WWWC: ") + matchedString + "\r\n";
-			delete[] matchedString;
-
-			// post process
-			RegexTerminate(regexHandle);
+			ThreadJoin(threadContext);
 			HTTPClose(httpContext);
+			httpContext = NULL;
 
-			MessageBox(hWnd, message.c_str(), "", MB_OK);
+			{
+				CriticalSection lock;
+				std::vector<Item>::iterator itor = find_uncheck_item();
+				if (itor == items.end())
+				{
+					--threadCount;
+					updateCounter(hWnd);
+				}
+				else
+				{
+					itor->check_flg = true;
+					httpContext =
+						HTTPCreateContext(itor->url_check.c_str(),
+										  NULL, NULL, 30);
+
+					contextMapper[threadContext] = httpContext;
+					ThreadStart(threadContext, httpContext, hWnd, WM_USER+1);
+				}
+			}		
+			break;
 		}
-		else
-			MessageBox(hWnd, "failed get.", "", MB_OK);
-		ThreadJoin(threadContext);
-		break;
 
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
+		case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			BeginPaint(hWnd, &ps);
+			const std::string message =
+				"キーを押すことで最大4スレッドまで増えます。";
+			TextOut(ps.hdc, 0, 0, message.c_str(), static_cast<int>(message.length()));
+			EndPaint(hWnd, &ps);
+
+			return 0;
+		}
+
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 
 	return 0;
 }
 
+//#include <eh.h>
 
 int WINAPI WinMain(HINSTANCE hInst, 
-				   HINSTANCE hPrev,
-				   char* pszCmdLine,
-				   int nCmdShow)
+				   HINSTANCE /*hPrev*/,
+				   char* /*pszCmdLine*/,
+				   int /*nCmdShow*/)
 {
+// 	_set_se_translator((_se_translator_function)translatorFunction);
+
 	void* handle = WWWInit();
 
 	char* className = "windowclass";
@@ -222,19 +388,22 @@ int WINAPI WinMain(HINSTANCE hInst,
 	cls.lpszClassName = className;
 	RegisterClassEx(&cls);
 
+	items = loadItems();
 	HWND hWnd = CreateWindowEx(0, className, "title",
 							   WS_OVERLAPPEDWINDOW,
 							   CW_USEDEFAULT, CW_USEDEFAULT,
-							   CW_USEDEFAULT, CW_USEDEFAULT,
+							   320, 240,
 							   NULL, NULL, hInst, NULL);
 
 	ShowWindow(hWnd, SW_SHOW);
 	UpdateWindow(hWnd);
-	
-	crc = 0;
-	dateLength = sizeof(dateBuffer);
+
+	for (int i = 0; i < 4; ++i)
+		threadHandler.push_back(ThreadCreate());
+
+	waitableThreads = threadHandler;
+
 	filterManagerContext = FilterManagerCreate();
-	threadContext = ThreadCreate();
 
 	MSG msg;
 	while(GetMessage(&msg, NULL, 0, 0) > 0)
@@ -242,11 +411,15 @@ int WINAPI WinMain(HINSTANCE hInst,
 		DispatchMessage(&msg);
 	}
 
-	ThreadClose(threadContext);
 	FilterManagerTerminate(filterManagerContext);
 	WWWTerminate(handle);
-	
-	return msg.wParam;
+
+	for (std::vector<void*>::iterator itor = threadHandler.begin();
+		 itor != threadHandler.end(); ++itor)
+		ThreadClose(*itor);
+
+	saveItems();
+	return static_cast<int>(msg.wParam);
 }
 
 #endif

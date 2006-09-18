@@ -1,17 +1,17 @@
 CXX=/cygdrive/c/MinGW/bin/g++
 DLLWRAP=/cygdrive/c/MinGW/bin/dllwrap
 DLLTOOL=/cygdrive/c/MinGW/bin/dlltool
-
+#CXX=g++
 .PHONY: strip clean depends
 
 test: wwwdll.dll wwwdlltest
 	./wwwdlltest.exe 300 http://drag11.sakura.ne.jp/check/
 
-debug: wwwdll.h wwwdll.cpp
+debug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
 	$(CXX) -DDEBUGMAIN -g -Wall -I. -Idepends -o debugmain wwwdll.cpp -lwsock32
 
-windebug: wwwdll.h wwwdll.cpp
-	$(CXX) -DDEBUGWINMAIN -mwindows -g -Wall -I. -Idepends -o debugwinmain wwwdll.cpp -lwsock32
+windebug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
+	$(CXX) -DDEBUGWINMAIN -mno-cygwin -mwindows -g -Wall -I. -Idepends -o debugwinmain wwwdll.cpp -lwsock32
 
 
 wwwdll.o: wwwdll.cpp
