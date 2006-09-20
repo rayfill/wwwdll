@@ -1,7 +1,7 @@
 CXX=/cygdrive/c/MinGW/bin/g++
+#CXX=g++
 DLLWRAP=/cygdrive/c/MinGW/bin/dllwrap
 DLLTOOL=/cygdrive/c/MinGW/bin/dlltool
-#CXX=g++
 .PHONY: strip clean depends
 
 test: wwwdll.dll wwwdlltest
@@ -11,14 +11,14 @@ debug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
 	$(CXX) -DDEBUGMAIN -g -Wall -I. -Idepends -o debugmain wwwdll.cpp -lwsock32
 
 windebug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGWINMAIN -mno-cygwin -mwindows -g -Wall -I. -Idepends -o debugwinmain wwwdll.cpp -lwsock32
+	$(CXX) -DDEBUGWINMAIN -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. -Idepends -o debugwinmain wwwdll.cpp -lwsock32
 
 
 wwwdll.o: wwwdll.cpp
-	$(CXX) -DNDEBUG -Wall -I. -Idepends -c wwwdll.cpp
+	$(CXX) -DNDEBUG -Wall -mthreads -I. -Idepends -c wwwdll.cpp
 
 wwwdll.dll: wwwdll.o wwwdll.def
-	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)` -o wwwdll.dll wwwdll.o -lwsock32
+	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)` -mthreads -o wwwdll.dll wwwdll.o -lwsock32
 
 libwwwdll.a: wwwdll.dll wwwdll.def
 	$(DLLTOOL) -k --def wwwdll.def --dllname wwwdll.dll --output-lib libwwwdll.a
@@ -32,8 +32,8 @@ strip:
 wwwdlltest: wwwdlltest.cpp libwwwdll.a
 	$(CXX) -g  -DDEBUGMAIN -I. -Idepends -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll
 
-wwwdllwintest:
-	$(CXX) -g  -DDEBUGWINMAIN -I. -Idepends  -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll
+wwwdllwintest: libwwwdll.a
+	$(CXX) -g  -DDEBUGWINMAIN -mthreads -mwindows -I. -Idepends  -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll
 
 depends:
 	cp ../new_lib/net/HTTPClient.hpp ./depends/net/HTTPClient.hpp

@@ -96,6 +96,7 @@ int main(int argc, char** argv)
 #include <fstream>
 #include <stdexcept>
 #include "wwwdll.h"
+#include <iostream>
 
 class Win32Exception : public std::runtime_error
 {
@@ -261,117 +262,139 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 						 WPARAM wParam,
 						 LPARAM lParam)
 {
-
-	switch (message)
+	try
 	{
-		case WM_CLOSE:
-			DestroyWindow(hWnd);
-			return 0;
-
-		case WM_DESTROY:
-			PostQuitMessage(0);
-			break;
-
-		case WM_KEYUP:
+		switch (message)
 		{
-			CriticalSection lock;
-			std::vector<Item>::iterator itor = find_uncheck_item();
-			if (itor != items.end() && waitableThreads.size() > 0)
-			{
-				void* threadContext = waitableThreads.back();
-				waitableThreads.pop_back();
+			case WM_CLOSE:
+				DestroyWindow(hWnd);
+				return 0;
 
-				itor->check_flg = true;
-				void* httpContext =
-					HTTPCreateContext(itor->url_check.c_str(),
-											NULL, NULL, 30);
+			case WM_DESTROY:
+				PostQuitMessage(0);
+				break;
 
-				contextMapper[threadContext] = httpContext;
-				ThreadStart(threadContext, httpContext, hWnd, WM_USER+1);
-				++threadCount;
-
-				updateCounter(hWnd);
-			}
-			break;
-		}
-
-		case WM_USER+1:
-		{
-			void* threadContext = reinterpret_cast<void*>(lParam);
-			void* httpContext = contextMapper[threadContext];
-			contextMapper[threadContext] = NULL;
-
-			if (wParam != 0)
-			{
-				++checkCount;
-				updateCounter(hWnd);
-				char url[2048];
-				url[HTTPGetURL(httpContext, url, sizeof(url))] = 0;
-
-				std::vector<Item>::iterator itor = find_item_from_url(url);
-
-				char date[256];
-				date[HTTPGetLastModified(httpContext, date, sizeof(date))] = 0;
-				itor->last_updated = date;
-				
-				itor->crc32 = HTTPGetFilteredCRC32(httpContext,
-												   filterManagerContext);
-				
-				itor->content_length = HTTPGetContentsLength(httpContext);
-			}
-
-			ThreadJoin(threadContext);
-			HTTPClose(httpContext);
-			httpContext = NULL;
-
+			case WM_KEYUP:
 			{
 				CriticalSection lock;
 				std::vector<Item>::iterator itor = find_uncheck_item();
-				if (itor == items.end())
+				if (itor != items.end() && waitableThreads.size() > 0)
 				{
-					--threadCount;
-					updateCounter(hWnd);
-				}
-				else
-				{
+					void* threadContext = waitableThreads.back();
+					waitableThreads.pop_back();
+
 					itor->check_flg = true;
-					httpContext =
+					void* httpContext =
 						HTTPCreateContext(itor->url_check.c_str(),
 										  NULL, NULL, 30);
 
 					contextMapper[threadContext] = httpContext;
 					ThreadStart(threadContext, httpContext, hWnd, WM_USER+1);
+					++threadCount;
+
+					updateCounter(hWnd);
 				}
-			}		
-			break;
+				break;
+			}
+
+			case WM_USER+1:
+			{
+				void* threadContext = reinterpret_cast<void*>(lParam);
+				ThreadJoin(threadContext);
+
+				void* httpContext = contextMapper[threadContext];
+				contextMapper[threadContext] = NULL;
+
+				if (wParam != 0)
+				{
+					++checkCount;
+					updateCounter(hWnd);
+					char url[2048];
+					url[HTTPGetURL(httpContext, url, sizeof(url))] = 0;
+
+					std::vector<Item>::iterator itor = find_item_from_url(url);
+
+					char date[256];
+					date[HTTPGetLastModified(httpContext, date, sizeof(date))] = 0;
+					itor->last_updated = date;
+				
+					itor->crc32 = HTTPGetFilteredCRC32(httpContext,
+													   filterManagerContext);
+				
+					itor->content_length = HTTPGetContentsLength(httpContext);
+				}
+
+				HTTPClose(httpContext);
+				httpContext = NULL;
+
+				{
+					CriticalSection lock;
+					std::vector<Item>::iterator itor = find_uncheck_item();
+					if (itor == items.end())
+					{
+						--threadCount;
+						updateCounter(hWnd);
+					}
+					else
+					{
+						itor->check_flg = true;
+						httpContext =
+							HTTPCreateContext(itor->url_check.c_str(),
+											  NULL, NULL, 30);
+
+						contextMapper[threadContext] = httpContext;
+						ThreadStart(threadContext, httpContext, hWnd, WM_USER+1);
+					}
+				}		
+				break;
+			}
+
+			case WM_PAINT:
+			{
+				PAINTSTRUCT ps;
+				BeginPaint(hWnd, &ps);
+				const std::string message =
+					"キーを押すことで最大4スレッドまで増えます。";
+				TextOut(ps.hdc, 0, 0, message.c_str(), static_cast<int>(message.length()));
+				EndPaint(hWnd, &ps);
+
+				return 0;
+			}
+
+			default:
+				return DefWindowProc(hWnd, message, wParam, lParam);
 		}
-
-		case WM_PAINT:
-		{
-			PAINTSTRUCT ps;
-			BeginPaint(hWnd, &ps);
-			const std::string message =
-				"キーを押すことで最大4スレッドまで増えます。";
-			TextOut(ps.hdc, 0, 0, message.c_str(), static_cast<int>(message.length()));
-			EndPaint(hWnd, &ps);
-
-			return 0;
-		}
-
-		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	catch (std::exception& e)
+	{
+		std::cout << std::endl << "exception: " << e.what() << std::endl;
 	}
 
 	return 0;
 }
 
 //#include <eh.h>
+#include <exception>
+
+void my_terminate()
+{
+	std::cout << "terminate program" << std::endl;
+	abort();
+}
+
+void my_unexpected()
+{
+	std::cout << "unexpected exception" << std::endl;
+	std::terminate();
+}
 
 int WINAPI WinMain(HINSTANCE hInst, 
 				   HINSTANCE /*hPrev*/,
 				   char* /*pszCmdLine*/,
 				   int /*nCmdShow*/)
 {
+	std::set_unexpected(my_unexpected);
+	std::set_terminate(my_terminate);
 // 	_set_se_translator((_se_translator_function)translatorFunction);
 
 	void* handle = WWWInit();

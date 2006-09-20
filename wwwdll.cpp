@@ -6,6 +6,7 @@
 #include <cassert>
 #include <fstream>
 #include "wwwdll.h"
+#include <iostream>
 
 typedef ThreadPool<>::RerunnableThread thread_t;
 class HTTPContext : public Runnable
@@ -41,7 +42,12 @@ private:
 			result = client.getResource(url.c_str());
 
 		}
-		catch (std::exception& /*e*/)
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			return false;
+		}
+		catch (...)
 		{
 			return false;
 		}
@@ -140,6 +146,11 @@ public:
 		{
 			throw ThreadException(e.what());
 		}
+		catch(...)
+		{
+			std::cerr << "unknown exception raised." << std::endl;
+		}
+
 		return result;
 	}
 };
@@ -495,9 +506,14 @@ long __stdcall FilterApply(void* filterHandle, char* contents)
 		 itor != executors->end(); ++itor)
 		target = (*itor)->execute(target);
 
-	std::string::const_iterator itor = target.begin();
-	while (itor != target.end())
-		*contents++ = *itor++;
+	assert(org_target_size >= target.length());
+
+	/**
+	 * どーもiteratorで回すとへんなコード生成するみたい・・・
+	 * 勘弁してくれ･･･
+	 */
+	for (size_t offset = 0; offset < target.length(); ++offset)
+		contents[offset] = target[offset];
 
 	return static_cast<long>(target.length());
 }
