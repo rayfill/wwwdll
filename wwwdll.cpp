@@ -6,7 +6,7 @@
 #include <cassert>
 #include <fstream>
 #include "wwwdll.h"
-#include <iostream>
+// #include <iostream>
 
 typedef ThreadPool<>::RerunnableThread thread_t;
 class HTTPContext : public Runnable
@@ -44,7 +44,7 @@ private:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+//			std::cerr << e.what() << std::endl;
 			return false;
 		}
 		catch (...)
@@ -148,7 +148,7 @@ public:
 		}
 		catch(...)
 		{
-			std::cerr << "unknown exception raised." << std::endl;
+			//std::cerr << "unknown exception raised." << std::endl;
 		}
 
 		return result;
@@ -506,11 +506,15 @@ long __stdcall FilterApply(void* filterHandle, char* contents)
 		 itor != executors->end(); ++itor)
 		target = (*itor)->execute(target);
 
-	assert(org_target_size >= target.length());
+// 	std::string::const_iterator itor = target.begin();
+// 	while (itor != target.end())
+// 		*contents++ = *itor++;
 
 	/**
 	 * どーもiteratorで回すとへんなコード生成するみたい・・・
 	 * 勘弁してくれ･･･
+	 * んー、_S_createがこけたのに例外握りつぶしてたどり
+	 * 着いてるのかなぁ･･･
 	 */
 	for (size_t offset = 0; offset < target.length(); ++offset)
 		contents[offset] = target[offset];

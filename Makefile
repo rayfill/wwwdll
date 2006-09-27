@@ -11,7 +11,7 @@ debug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
 	$(CXX) -DDEBUGMAIN -g -Wall -I. -Idepends -o debugmain wwwdll.cpp -lwsock32
 
 windebug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGWINMAIN -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. -Idepends -o debugwinmain wwwdll.cpp -lwsock32
+	$(CXX) -DDEBUGWINMAIN -D_REENT -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. -Idepends -o debugwinmain wwwdll.cpp -lwsock32
 
 
 wwwdll.o: wwwdll.cpp
