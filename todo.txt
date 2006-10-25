@@ -84,3 +84,17 @@ void FilterClose();
 00:44 (GrandM) http://www3.to/hosikuzu/ も・・・って、www3.to か(´Д｀;)
 00:44 (rayfill) やっぱり30x系サポートしたほうがよさげだよね・・・
 00:45 (GrandM) http://www.geocities.co.jp/Playtown/3932/ で GetFilterCRC32 とまるねぇ
+
+yahooで取得できず
+20:08:01 <GrandM> WWWDLL で ? 付のＵＲＬいけるんだっけか
+20:08:18 <rayfill> 特に検査はしてないからいけるはず
+20:08:24 <GrandM> http://search.auctions.yahoo.co.jp/jp/search/auc?p=%A5%B3%A5%DF+%A5%C1%A5%B1&auccat=0&alocale=0jp&acc=jp とか
+
+対応。HTTP/1.0だったのでデータ取れてなかった
+
+GrandM> http://kotopan.is-a-geek.com:8080/ wwwdll で読み込んだらおちるかも
+21:17:08 <rayfill> りょーかい、確認しま
+21:17:10 <GrandM> http://kotopan.is-a-geek.com:8080/nakami1.htm
+21:17:14 <GrandM> ここがいいか
+
+対応。URL内のparseURLでport番号の切り分け範囲が間違ってたせいでlexicalCastがCastErrorを投げて、コンストラクタの例外指定で引っかかって落ちてた。

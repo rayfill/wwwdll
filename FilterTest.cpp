@@ -70,7 +70,7 @@ int main()
 	manager.addRules(rules);
 
 	std::vector<Executor*> executors =
-		manager.getExecutors("http://www.infoseek.co.jp/");
+		manager.getExecutors("http://www.geocities.jp/hazimes316/top.htm");
 
 	std::cout << "matched executors: " << executors.size() << std::endl;
 

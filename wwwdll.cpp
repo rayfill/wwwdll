@@ -6,7 +6,7 @@
 #include <cassert>
 #include <fstream>
 #include "wwwdll.h"
-// #include <iostream>
+//#include <iostream>
 
 typedef ThreadPool<>::RerunnableThread thread_t;
 class HTTPContext : public Runnable
@@ -42,7 +42,7 @@ private:
 			result = client.getResource(url.c_str());
 
 		}
-		catch (std::exception& e)
+		catch (std::exception& /*e*/)
 		{
 //			std::cerr << e.what() << std::endl;
 			return false;
