@@ -8,20 +8,20 @@ test: wwwdll.dll wwwdlltest
 	./wwwdlltest.exe 300 http://www.geocities.jp/hazimes316/top.htm
 
 filterTest: FilterTest.cpp Filter.hpp
-	$(CXX) -g -Wall -fstack-check -I. -IC:/MinGW/include/stlport -Idepends -o filterTest FilterTest.cpp
+	$(CXX) -g -Wall -I. -IC:/MinGW/include/stlport -Idepends -o filterTest FilterTest.cpp -lstlport
 
 debug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
 	$(CXX) -DDEBUGMAIN -g -Wall -I. -IC:/MinGW/include/stlport -Idepends -o debugmain wwwdll.cpp -lwsock32 -LC:/MinGW/lib -lstlport
 
 windebug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGWINMAIN -D_REENT -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. -IC:/MinGW/include/stlport -Idepends -o debugwinmain wwwdll.cpp -lwsock32 -LC:/MinGW/lib -lstlport
+	$(CXX) -DDEBUGWINMAIN -v -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. -IC:/MinGW/include/stlport -Idepends -o debugwinmain wwwdll.cpp -lwsock32 -LC:/MinGW/lib -lstlport
 
 
 wwwdll.o: wwwdll.cpp
-	$(CXX) -DNDEBUG -Wall -mthreads -I. -IC:/MinGW/include/stlport -Idepends -c wwwdll.cpp
+	$(CXX) -DNDEBUG -Wall -v -mthreads -I. -IC:/MinGW/include/stlport -Idepends -c wwwdll.cpp
 
 wwwdll.dll: wwwdll.o wwwdll.def
-	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)` -mthreads -o wwwdll.dll wwwdll.o -lwsock32 -LC:/MinGW/lib -lstlport
+	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)` -v -mthreads -o wwwdll.dll wwwdll.o -lwsock32 -LC:/MinGW/lib -lstlport
 
 libwwwdll.a: wwwdll.dll wwwdll.def
 	$(DLLTOOL) -k --def wwwdll.def --dllname wwwdll.dll --output-lib libwwwdll.a
@@ -36,7 +36,7 @@ wwwdlltest: wwwdlltest.cpp libwwwdll.a
 	$(CXX) -g  -DDEBUGMAIN -I. -IC:/MinGW/include/stlport -Idepends -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll -LC:/MinGW/lib -lstlport
 
 wwwdllwintest: libwwwdll.a
-	$(CXX) -g  -DDEBUGWINMAIN -mthreads -mwindows -I. -IC:/MinGW/include/stlport -Idepends  -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll -LC:/MinGW/lib -lstlport
+	$(CXX) -g  -DDEBUGWINMAIN -v -mthreads -mwindows -I. -IC:/MinGW/include/stlport -Idepends  -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll -LC:/MinGW/lib -lstlport
 
 depends:
 	cp ../new_lib/net/HTTPClient.hpp ./depends/net/HTTPClient.hpp

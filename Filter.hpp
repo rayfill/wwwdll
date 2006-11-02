@@ -67,9 +67,6 @@ namespace Filter
 		{
 			assert(static_cast<unsigned int>(patternNumber) < tokens.size());
 
-			if (current >= target.length())
-				return std::string::npos;
-
 			const std::string currentPattern = tokens[patternNumber];
 
 			if (currentPattern == "*")
@@ -80,6 +77,9 @@ namespace Filter
 				
 				return current;
 			}
+
+			if (current >= target.length())
+				return std::string::npos;
 
 			current = target.find(currentPattern, current);
 			if (current == std::string::npos)
@@ -143,6 +143,11 @@ namespace Filter
 				return std::make_pair<size_t, size_t>(0, 0);
 
 			return std::make_pair(first, last);
+		}
+
+		std::string toString() const
+		{
+			return pattern + ", ignore: " + (ignoreCase ? "true" : "false");
 		}
 	};
 

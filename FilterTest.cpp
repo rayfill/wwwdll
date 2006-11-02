@@ -21,15 +21,14 @@ namespace Filter
 	public:
 		void main()
 		{
-			const std::string pattern = "HTTP://*.INFOSEEK.co.jp/*a*";
+			const std::string pattern = "http://*.cool.ne.jp/*";
 			Matcher matcher(pattern.c_str(), true);
 			
 			std::cout << "tokenize of: " << pattern <<
 				std::endl;
 			output(matcher.tokens);
 
-			std::string target =
-				"aaaaahttp://www.hp.infoSEEK.co.jp/hogehoge.infoSEEK.co.jp/a";
+			std::string target = "http://miumiu-s.cool.ne.jp/";
 			std::pair<size_t, size_t> pair =
 				matcher.match(target);
 
@@ -42,7 +41,7 @@ namespace Filter
 
 int main()
 {
-// 	FilterMatcherTest().main();
+ 	FilterMatcherTest().main();
 	
 	Filter::MatchUtil util("<body", "</body>", true);
 	std::ifstream ifs("teiten.html");

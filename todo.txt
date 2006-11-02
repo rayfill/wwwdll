@@ -98,3 +98,10 @@ GrandM> http://kotopan.is-a-geek.com:8080/ wwwdll で読み込んだらおちるかも
 21:17:14 <GrandM> ここがいいか
 
 対応。URL内のparseURLでport番号の切り分け範囲が間違ってたせいでlexicalCastがCastErrorを投げて、コンストラクタの例外指定で引っかかって落ちてた。
+
+
+21:04:47 <GrandM> http://miumiu-s.cool.ne.jp/
+21:04:52 <GrandM> http://epicure-web.hp.infoseek.co.jp/
+21:04:54 <rayfill> うぃ
+21:05:00 <GrandM> wwwdlltest で止まる↑
+21:05:04 <rayfill> りょーかい

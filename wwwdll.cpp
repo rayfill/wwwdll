@@ -6,7 +6,6 @@
 #include <cassert>
 #include <fstream>
 #include "wwwdll.h"
-//#include <iostream>
 
 typedef ThreadPool<>::RerunnableThread thread_t;
 class HTTPContext : public Runnable

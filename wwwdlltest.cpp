@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 		void* httpContext;
 		int result = 0;
 		httpContext = HTTPGetContentsSync(url.c_str(),
-										   "Y=v=1&n=1tuapthd2jrpa&l=0b548c/o&p=m2cvvjp412000400&ig=40vra&r=3t&lg=jp&intl=jp; PRF=s=0&t=2121.t; I=ir=gp&in=73cecb35&i1=AAAVAEA2BdBqCXCaCbC4DDDTDWDaDiGmIOIpLCLILJL7Mk; B=4u3gelp2ia6pn&b=3&s=nj; F=a=8q6F6qAsvVPVP4Gd.jIQLsG9Bgk.9lk.HlXa8AxORd2Wgl14htLozSm8qlzv&b=3NFt; ITI=v1=087444912402131934061015135725|vcptn%3DECN0000000000E000T002025973088&v2=1166104645&v3=1&v4=cPrxUKqhajpuvTb_CvSBTK0FDEQ-; T=z=rVbNFBrbwNFBKjqHswnYk/TNTAGNTI3NDNPNDYy&a=YAE&sk=DAA/DxM9JRJxgK&d=c2wBTWpjQk1qVXdNelE0TXpFMQFhAVlBRQFvawFaVzAtAXRpcAFiTEVSaUEBenoBclZiTkZCZ1dB; AUCL=h2aZsipL_SlgRszjGumyxphchFAg5ps36O5Y5bELOMuDqafU62byFqlHSqIqo3h7YN1eRW_.0ph9C64mirauwKkMStUkQ2hg6oHVC9uasPWLz20H7nSrWpwwyaXEO7rTYn8T0mxdZhiuk_qpySJ8VztjfTek0QCgjGqj.38e4Co0Zs6JVef92eStAFGjOruoRJ6iI_pv270EB3zSQJ9voeGmXRs7o8jyFI5YmiEPR0QsCeD9SGe_ohRDLwe5_FWcdrpb7r0ruCEP0tdGjIDt_BABTzycK4GM1vnzU5o21ZX9Fu1PvK_mUKfiHrOWXVUvBuPLiB4-; AUCH=OnKXnSpL_SlqmCQJ.NocSi9nTfPPMxwb80mdfH.wKHtBpXrvszCaPKAFU6n9a8EdUoQUeizFg2OZb1LLcYsQ.alfeZrxOyC84QNKBBaU9gp7jdvOKj3PECcmcIiROt73CzYaOodN7K1Q9ib9vlfs58ZI37YI4z3YDxysf6uB.XRO4iiHBo3XH8gADMxZg7d.shdLoKxvaS4znZ56qtqk6fUVSvDy2pGdWYREc_UKJTOT0fFR0txnFcS41I6LWo6a1IjEtPnFOg--",
+										   NULL,
 										   "Mozilla/5.0 (Windows; U; Windows NT 5.1; ja; rv:1.8.0.7) Gecko/20060909 Firefox/1.5.0.7",
 										   timeout,
 										   &result);
