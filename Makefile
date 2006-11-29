@@ -8,20 +8,20 @@ test: wwwdll.dll wwwdlltest
 	./wwwdlltest.exe 300 http://www.geocities.jp/hazimes316/top.htm
 
 filterTest: FilterTest.cpp Filter.hpp
-	$(CXX) -g -Wall -I. -IC:/MinGW/include/stlport -Idepends -o filterTest FilterTest.cpp -lstlport
+	$(CXX) -g -Wall -I. $(INCLUDES) -Idepends -o filterTest FilterTest.cpp $(LIBS)
 
 debug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGMAIN -g -Wall -I. -IC:/MinGW/include/stlport -Idepends -o debugmain wwwdll.cpp -lwsock32 -LC:/MinGW/lib -lstlport
+	$(CXX) -DDEBUGMAIN -g -Wall -I. $(INCLUDES) -Idepends -o debugmain wwwdll.cpp -lwsock32 $(LIB_PATH)  $(LIBS)
 
 windebug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGWINMAIN -v -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. -IC:/MinGW/include/stlport -Idepends -o debugwinmain wwwdll.cpp -lwsock32 -LC:/MinGW/lib -lstlport
+	$(CXX) -DDEBUGWINMAIN  -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. $(INCLUDES) -Idepends -o debugwinmain wwwdll.cpp -lwsock32 $(LIB_PATH)  $(LIBS)
 
 
 wwwdll.o: wwwdll.cpp
-	$(CXX) -DNDEBUG -Wall -v -mthreads -I. -IC:/MinGW/include/stlport -Idepends -c wwwdll.cpp
+	$(CXX) -DNDEBUG -Wall  -mthreads -I. $(INCLUDES) -Idepends -c wwwdll.cpp
 
 wwwdll.dll: wwwdll.o wwwdll.def
-	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)` -v -mthreads -o wwwdll.dll wwwdll.o -lwsock32 -LC:/MinGW/lib -lstlport
+	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)`  -mthreads -o wwwdll.dll wwwdll.o -lwsock32 $(LIB_PATH)  $(LIBS)
 
 libwwwdll.a: wwwdll.dll wwwdll.def
 	$(DLLTOOL) -k --def wwwdll.def --dllname wwwdll.dll --output-lib libwwwdll.a
@@ -33,41 +33,41 @@ strip:
 	strip wwwdll.dll wwwdlltest.exe
 
 wwwdlltest: wwwdlltest.cpp libwwwdll.a
-	$(CXX) -g  -DDEBUGMAIN -I. -IC:/MinGW/include/stlport -Idepends -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll -LC:/MinGW/lib -lstlport
+	$(CXX) -g  -DDEBUGMAIN -I. $(INCLUDES) -Idepends -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
 
 wwwdllwintest: libwwwdll.a
-	$(CXX) -g  -DDEBUGWINMAIN -v -mthreads -mwindows -I. -IC:/MinGW/include/stlport -Idepends  -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll -LC:/MinGW/lib -lstlport
+	$(CXX) -g  -DDEBUGWINMAIN  -mthreads -mwindows -I. $(INCLUDES) -Idepends  -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
 
 depends:
-	cp ../new_lib/net/HTTPClient.hpp ./depends/net/HTTPClient.hpp
-	cp ../new_lib/net/HTTPProperty.hpp ./depends/net/HTTPProperty.hpp
-	cp ../new_lib/net/HTTPResult.hpp ./depends/net/HTTPResult.hpp
-	cp ../new_lib/net/NetService.hpp ./depends/net/NetService.hpp
-	cp ../new_lib/net/URL.hpp ./depends/net/URL.hpp
-	cp ../new_lib/Socket/ClientSocket.hpp ./depends/Socket/ClientSocket.hpp
-	cp ../new_lib/Socket/IP.hpp ./depends/Socket/IP.hpp
-	cp ../new_lib/Socket/NativeSocket.hpp ./depends/Socket/NativeSocket.hpp
-	cp ../new_lib/Socket/ServerSocket.hpp ./depends/Socket/ServerSocket.hpp
-	cp ../new_lib/Socket/Socket.hpp ./depends/Socket/Socket.hpp
-	cp ../new_lib/Socket/SocketException.hpp ./depends/Socket/SocketException.hpp
-	cp ../new_lib/text/LexicalCast.hpp ./depends/text/LexicalCast.hpp
-	cp ../new_lib/text/regex/RegexCompile.hpp ./depends/text/regex/RegexCompile.hpp
-	cp ../new_lib/Thread/CollectableThreadGroup.hpp ./depends/Thread/CollectableThreadGroup.hpp
-	cp ../new_lib/Thread/CriticalSection.hpp ./depends/Thread/CriticalSection.hpp
-	cp ../new_lib/Thread/Event.hpp ./depends/Thread/Event.hpp
-	cp ../new_lib/Thread/Mutex.hpp ./depends/Thread/Mutex.hpp
-	cp ../new_lib/Thread/Runnable.hpp ./depends/Thread/Runnable.hpp
-	cp ../new_lib/Thread/Thread.hpp ./depends/Thread/Thread.hpp
-	cp ../new_lib/Thread/ThreadException.hpp ./depends/Thread/ThreadException.hpp
-	cp ../new_lib/Thread/ThreadGroup.hpp ./depends/Thread/ThreadGroup.hpp
-	cp ../new_lib/Thread/ThreadPool.hpp ./depends/Thread/ThreadPool.hpp
-	cp ../new_lib/util/CRC.hpp ./depends/util/CRC.hpp
-	cp ../new_lib/util/hash/SHA1.hpp ./depends/util/hash/SHA1.hpp
-	cp ../new_lib/util/Notification.hpp ./depends/util/Notification.hpp
-	cp ../new_lib/util/Property.hpp ./depends/util/Property.hpp
-	cp ../new_lib/util/Singleton.hpp ./depends/util/Singleton.hpp
-	cp ../new_lib/util/SmartPointer.hpp ./depends/util/SmartPointer.hpp
-	cp ../new_lib/WinThread/WinCriticalSection.hpp ./depends/WinThread/WinCriticalSection.hpp
-	cp ../new_lib/WinThread/WinEvent.hpp ./depends/WinThread/WinEvent.hpp
-	cp ../new_lib/WinThread/WinMutex.hpp ./depends/WinThread/WinMutex.hpp
-	cp ../new_lib/WinThread/WinThread.hpp ./depends/WinThread/WinThread.hpp
+	cp ../cpp_lib/net/HTTPClient.hpp ./depends/net/HTTPClient.hpp
+	cp ../cpp_lib/net/HTTPProperty.hpp ./depends/net/HTTPProperty.hpp
+	cp ../cpp_lib/net/HTTPResult.hpp ./depends/net/HTTPResult.hpp
+	cp ../cpp_lib/net/NetService.hpp ./depends/net/NetService.hpp
+	cp ../cpp_lib/net/URL.hpp ./depends/net/URL.hpp
+	cp ../cpp_lib/Socket/ClientSocket.hpp ./depends/Socket/ClientSocket.hpp
+	cp ../cpp_lib/Socket/IP.hpp ./depends/Socket/IP.hpp
+	cp ../cpp_lib/Socket/NativeSocket.hpp ./depends/Socket/NativeSocket.hpp
+	cp ../cpp_lib/Socket/ServerSocket.hpp ./depends/Socket/ServerSocket.hpp
+	cp ../cpp_lib/Socket/Socket.hpp ./depends/Socket/Socket.hpp
+	cp ../cpp_lib/Socket/SocketException.hpp ./depends/Socket/SocketException.hpp
+	cp ../cpp_lib/text/LexicalCast.hpp ./depends/text/LexicalCast.hpp
+	cp ../cpp_lib/text/regex/RegexCompile.hpp ./depends/text/regex/RegexCompile.hpp
+	cp ../cpp_lib/Thread/CollectableThreadGroup.hpp ./depends/Thread/CollectableThreadGroup.hpp
+	cp ../cpp_lib/Thread/CriticalSection.hpp ./depends/Thread/CriticalSection.hpp
+	cp ../cpp_lib/Thread/Event.hpp ./depends/Thread/Event.hpp
+	cp ../cpp_lib/Thread/Mutex.hpp ./depends/Thread/Mutex.hpp
+	cp ../cpp_lib/Thread/Runnable.hpp ./depends/Thread/Runnable.hpp
+	cp ../cpp_lib/Thread/Thread.hpp ./depends/Thread/Thread.hpp
+	cp ../cpp_lib/Thread/ThreadException.hpp ./depends/Thread/ThreadException.hpp
+	cp ../cpp_lib/Thread/ThreadGroup.hpp ./depends/Thread/ThreadGroup.hpp
+	cp ../cpp_lib/Thread/ThreadPool.hpp ./depends/Thread/ThreadPool.hpp
+	cp ../cpp_lib/util/CRC.hpp ./depends/util/CRC.hpp
+	cp ../cpp_lib/util/hash/SHA1.hpp ./depends/util/hash/SHA1.hpp
+	cp ../cpp_lib/util/Notification.hpp ./depends/util/Notification.hpp
+	cp ../cpp_lib/util/Property.hpp ./depends/util/Property.hpp
+	cp ../cpp_lib/util/Singleton.hpp ./depends/util/Singleton.hpp
+	cp ../cpp_lib/util/SmartPointer.hpp ./depends/util/SmartPointer.hpp
+	cp ../cpp_lib/WinThread/WinCriticalSection.hpp ./depends/WinThread/WinCriticalSection.hpp
+	cp ../cpp_lib/WinThread/WinEvent.hpp ./depends/WinThread/WinEvent.hpp
+	cp ../cpp_lib/WinThread/WinMutex.hpp ./depends/WinThread/WinMutex.hpp
+	cp ../cpp_lib/WinThread/WinThread.hpp ./depends/WinThread/WinThread.hpp
