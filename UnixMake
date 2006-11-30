@@ -1,0 +1,19 @@
+#DEPENDS_PATH=$(DEPENDS_PATH)
+DEPENDS_PATH=-I../cpp_lib
+TARGET=libwwwdll.so
+FILTERTEST=filterTest
+
+.PHONY: depends clean
+
+all: $(TARGET)
+
+clean:
+	rm -rf $(TARGET) $(FILTERTEST) *.o
+
+
+filterTest: FilterTest.cpp Filter.hpp
+	$(CXX) -g -Wall $(DEPENDS_PATH) -o filterTest FilterTest.cpp
+
+$(TARGET): wwwdll.cpp wwwdll.h
+	$(CXX) -g -Wall -shared -o libwwwdll.so $(DEPENDS_PATH) wwwdll.cpp
+
