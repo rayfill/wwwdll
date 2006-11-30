@@ -1,264 +1,289 @@
-#ifndef HTMLMODIFYCHECKER_HPP_
-#define HTMLMODIFYCHECKER_HPP_
+#ifndef WWWDLL_H_
+#define WWWDLL_H_
 
-#include <windows.h>
+#ifdef WIN32
+#	include <windows.h>
+#	define CALLDECL	__stdcall
+#else /* outside win32 environment(POSIX?). */
+#	ifdef __cplusplus
+extern "C"
+{
+	typedef void (*Callback)(int result, void* threadContext);
+}
+#	endif /* __cplusplus */
+#	define CALLDECL
+#endif /* WIN32 */
 
 #ifdef __cplusplus
 extern "C"
 {
-#endif
+#endif /* __cplusplus */
 
 	/**
-	 * ƒXƒŒƒbƒhƒRƒ“ƒeƒLƒXƒg‚Ìì¬
-	 * @return ƒXƒŒƒbƒhƒRƒ“ƒeƒLƒXƒgƒnƒ“ƒhƒ‹
+	 * ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ä½œæˆ
+	 * @return ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆãƒãƒ³ãƒ‰ãƒ«
 	 */
-	void* __stdcall ThreadCreate();
+	void* CALLDECL ThreadCreate();
 	
+#ifdef WIN32
 	/**
-	 * ƒXƒŒƒbƒhƒRƒ“ƒeƒLƒXƒg‚ÌÀs
-	 * @param context Às‚·‚éHTTPƒRƒ“ƒeƒLƒXƒg
-	 * @param hWnd ƒR[ƒ‹ƒoƒbƒN‚·‚éWindow‚Ìƒnƒ“ƒhƒ‹
-	 * @param message ƒR[ƒ‹ƒoƒbƒN‚·‚éƒEƒBƒ“ƒhƒEƒƒbƒZ[ƒWID
-	 * @note ƒR[ƒ‹ƒoƒbƒN‚³‚ê‚éƒEƒBƒ“ƒhƒEƒƒbƒZ[ƒW‚ÌwParam‚ÉŠÖ”‚ÌÀsŒ‹‰Ê
-	 * (1‚ªŠ®—¹A0‚ª¸”s)AlParam‚ÉƒXƒŒƒbƒhƒRƒ“ƒeƒLƒXƒg‚ª‚©‚¦‚éB
+	 * ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®å®Ÿè¡Œ
+	 * @param context å®Ÿè¡Œã™ã‚‹HTTPã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
+	 * @param hWnd ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã™ã‚‹Windowã®ãƒãƒ³ãƒ‰ãƒ«
+	 * @param message ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã™ã‚‹ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ID
+	 * @note ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã•ã‚Œã‚‹ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®wParamã«é–¢æ•°ã®å®Ÿè¡Œçµæœ
+	 * (1ãŒå®Œäº†ã€0ãŒå¤±æ•—)ã€lParamã«ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆãŒã‹ãˆã‚‹ã€‚
 	 */
-	void __stdcall ThreadStart(void* context,
+	void CALLDECL ThreadStart(void* context,
 							   void* httpContext,
 							   HWND hWnd,
 							   const unsigned int message);
+#else
+	/**
+	 * ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®å®Ÿè¡Œ
+	 * @param context å®Ÿè¡Œã™ã‚‹HTTPã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
+	 * @param callbackFunc ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã•ã‚Œã‚‹é–¢æ•°ãƒã‚¤ãƒ³ã‚¿ã€‚
+	 * é–¢æ•°ã‚·ã‚°ãƒãƒãƒ£ã¯ void (*Callback)(int result, void* threadContext);ã€
+	 * @note ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã•ã‚Œã‚‹é–¢æ•°ã®ç¬¬ä¸€å¼•æ•°ãŒå‡¦ç†çµæœã€(1ãŒå®Œäº†ã€0ãŒå¤±æ•—)ã€
+	 * ç¬¬äºŒå¼•æ•°ã«ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆãŒã‹ãˆã‚‹ã€‚
+	 */
+	void CALLDECL ThreadStart(void* context,
+							   void* httpContext,
+							   Callback callbackFunc);
+#endif /* WIN32 */
 
 	/**
-	 *  ƒXƒŒƒbƒh‚ÌI—¹‘Ò‚¿
-	 * @param threadContext ƒXƒŒƒbƒhƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹
-	 * @return Œ»İ‚Å‚Í0ŒÅ’è
-	 * (—]—T‚ª‚ ‚Á‚½‚çÀs‚µ‚½ˆ—‚Ì–ß‚è’l‚ğ•Ô‚·‚æ‚¤‚É•ÏX‚µ‚Ü‚·)
+	 *  ã‚¹ãƒ¬ãƒƒãƒ‰ã®çµ‚äº†å¾…ã¡
+	 * @param threadContext ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«
+	 * @return ç¾åœ¨ã§ã¯0å›ºå®š
+	 * (ä½™è£•ãŒã‚ã£ãŸã‚‰å®Ÿè¡Œã—ãŸå‡¦ç†ã®æˆ»ã‚Šå€¤ã‚’è¿”ã™ã‚ˆã†ã«å¤‰æ›´ã—ã¾ã™)
 	 */
-	long __stdcall ThreadJoin(void* threadContext);
+	long CALLDECL ThreadJoin(void* threadContext);
 
 	/**
-	 * ƒXƒŒƒbƒhƒRƒ“ƒeƒLƒXƒg‚Ì”jŠü
-	 * @param threadContext ƒXƒŒƒbƒhƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹
+	 * ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ç ´æ£„
+	 * @param threadContext ã‚¹ãƒ¬ãƒƒãƒ‰ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«
 	 */
-	void __stdcall ThreadClose(void* threadContext);
+	void CALLDECL ThreadClose(void* threadContext);
 
 
 	/**
-	 * WebƒRƒ“ƒeƒ“ƒcæ“¾ƒRƒ“ƒeƒLƒXƒg‚Ìì¬
-	 * @param url ƒRƒ“ƒeƒ“ƒc‚Ì‚ ‚éURL
-	 * @param cookie ƒRƒ“ƒeƒ“ƒcæ“¾‚É•t—^‚·‚éCookieB‚È‚¢ê‡‚ÍNULL‚ğw’è‚·‚é
-	 * @param userAgent ƒRƒ“ƒeƒ“ƒcæ“¾‚Ég‚¤UserAgentBƒfƒtƒHƒ‹ƒg‚Ìê‡‚ÍNULL
-	 * @param timeout –³’ÊMƒ^ƒCƒ€ƒAƒEƒgŠÔB
-	 * @return ì‹Æ‚ğs‚¤HTTPƒRƒ“ƒeƒLƒXƒgƒnƒ“ƒhƒ‹B
+	 * Webã‚³ãƒ³ãƒ†ãƒ³ãƒ„å–å¾—ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ä½œæˆ
+	 * @param url ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®ã‚ã‚‹URL
+	 * @param cookie ã‚³ãƒ³ãƒ†ãƒ³ãƒ„å–å¾—æ™‚ã«ä»˜ä¸ã™ã‚‹Cookieã€‚ãªã„å ´åˆã¯NULLã‚’æŒ‡å®šã™ã‚‹
+	 * @param userAgent ã‚³ãƒ³ãƒ†ãƒ³ãƒ„å–å¾—æ™‚ã«ä½¿ã†UserAgentã€‚ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®å ´åˆã¯NULL
+	 * @param timeout ç„¡é€šä¿¡ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆæ™‚é–“ã€‚
+	 * @return ä½œæ¥­ã‚’è¡Œã†HTTPã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆãƒãƒ³ãƒ‰ãƒ«ã€‚
 	 */
-	void* __stdcall HTTPCreateContext(const char* url,
+	void* CALLDECL HTTPCreateContext(const char* url,
 									  const char* cookie,
 									  const char* userAgent,
 									  const long timeout);
 
-	void* __stdcall HTTPGetContentsSync(const char* url,
+	void* CALLDECL HTTPGetContentsSync(const char* url,
 										const char* cookie,
 										const char* userAgent,
 										const long timeout,
 										int* result);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ÌURL‚Ìæ“¾
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
-	 * @param buffer URL‚ğó‚¯æ‚éƒoƒbƒtƒ@
-	 * @oaram length ƒoƒbƒtƒ@‚Ì’·‚³
-	 * @return ‘‚«‚İ‚É•K—v‚Èƒoƒbƒtƒ@’·A‚à‚µ‚­‚Í‘‚«‚ñ‚¾’·‚³
-	 * @note ‚Ü‚¸ buffer‚ÉNULL‚ğw’è‚µŒÄ‚Ño‚µA•K—v‚È•¶š—ñ’·‚ğæ“¾‚µA
-	 * ƒoƒbƒtƒ@‚ğŠm•Û‚µ‚½Œã‚ÉŠm•Û‚µ‚½ƒoƒbƒtƒ@‚ğbuffer‚Éw’è‚µ‚ÄŒÄ‚Ño‚·‚±‚Æ‚Å
-	 * æ“¾‚Å‚«‚éB
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®URLã®å–å¾—
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
+	 * @param buffer URLã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡
+	 * @oaram length ãƒãƒƒãƒ•ã‚¡ã®é•·ã•
+	 * @return æ›¸ãè¾¼ã¿ã«å¿…è¦ãªãƒãƒƒãƒ•ã‚¡é•·ã€ã‚‚ã—ãã¯æ›¸ãè¾¼ã‚“ã é•·ã•
+	 * @note ã¾ãš bufferã«NULLã‚’æŒ‡å®šã—å‘¼ã³å‡ºã—ã€å¿…è¦ãªæ–‡å­—åˆ—é•·ã‚’å–å¾—ã—ã€
+	 * ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿ã—ãŸå¾Œã«ç¢ºä¿ã—ãŸãƒãƒƒãƒ•ã‚¡ã‚’bufferã«æŒ‡å®šã—ã¦å‘¼ã³å‡ºã™ã“ã¨ã§
+	 * å–å¾—ã§ãã‚‹ã€‚
 	 */
-	int __stdcall HTTPGetURL(void* httpContext,
+	int CALLDECL HTTPGetURL(void* httpContext,
 							 char* buffer,
 							 const int length);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ÌXV“ú‚Ìæ“¾
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
-	 * @param buffer XV“ú‚ğó‚¯æ‚éƒoƒbƒtƒ@
-	 * @oaram length ƒoƒbƒtƒ@‚Ì’·‚³
-	 * @return ‘‚«‚İ‚É•K—v‚Èƒoƒbƒtƒ@’·A‚à‚µ‚­‚Í‘‚«‚ñ‚¾’·‚³
-	 * @note ‚Ü‚¸ buffer‚ÉNULL‚ğw’è‚µŒÄ‚Ño‚µA•K—v‚È•¶š—ñ’·‚ğæ“¾‚µA
-	 * ƒoƒbƒtƒ@‚ğŠm•Û‚µ‚½Œã‚ÉŠm•Û‚µ‚½ƒoƒbƒtƒ@‚ğbuffer‚Éw’è‚µ‚ÄŒÄ‚Ño‚·‚±‚Æ‚Å
-	 * æ“¾‚Å‚«‚éB
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®æ›´æ–°æ—¥æ™‚ã®å–å¾—
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
+	 * @param buffer æ›´æ–°æ—¥æ™‚ã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡
+	 * @oaram length ãƒãƒƒãƒ•ã‚¡ã®é•·ã•
+	 * @return æ›¸ãè¾¼ã¿ã«å¿…è¦ãªãƒãƒƒãƒ•ã‚¡é•·ã€ã‚‚ã—ãã¯æ›¸ãè¾¼ã‚“ã é•·ã•
+	 * @note ã¾ãš bufferã«NULLã‚’æŒ‡å®šã—å‘¼ã³å‡ºã—ã€å¿…è¦ãªæ–‡å­—åˆ—é•·ã‚’å–å¾—ã—ã€
+	 * ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿ã—ãŸå¾Œã«ç¢ºä¿ã—ãŸãƒãƒƒãƒ•ã‚¡ã‚’bufferã«æŒ‡å®šã—ã¦å‘¼ã³å‡ºã™ã“ã¨ã§
+	 * å–å¾—ã§ãã‚‹ã€‚
 	 */
-	long __stdcall HTTPGetLastModified(void* HttpContext,
+	long CALLDECL HTTPGetLastModified(void* HttpContext,
 									   char* buffer, const int length);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ÌƒŒƒXƒ|ƒ“ƒXƒR[ƒh
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®ãƒ¬ã‚¹ãƒãƒ³ã‚¹ã‚³ãƒ¼ãƒ‰
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
 	 * @return HTTP response code
 	 */
-	long __stdcall HTTPGetResponseCode(void* HttpContext);
+	long CALLDECL HTTPGetResponseCode(void* HttpContext);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ÌCRC32‚Ìæ“¾
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
-	 * @return CRC32’l
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®CRC32ã®å–å¾—
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
+	 * @return CRC32å€¤
 	 */
-	long __stdcall HTTPGetCRC32(void* HttpContext);
+	long CALLDECL HTTPGetCRC32(void* HttpContext);
 
 	/**
-	 * •¶š—ñ‚ÌCRC32‚Ìæ“¾
-	 * @param buffer CRC32’l‚ğŒvZ‚·‚é•¶š—ñ
-	 * @return CRC32’l
+	 * æ–‡å­—åˆ—ã®CRC32ã®å–å¾—
+	 * @param buffer CRC32å€¤ã‚’è¨ˆç®—ã™ã‚‹æ–‡å­—åˆ—
+	 * @return CRC32å€¤
 	 */
-	long __stdcall HTTPGetCRC32FromString(const char* buffer);
+	long CALLDECL HTTPGetCRC32FromString(const char* buffer);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ÌFilter“K—pŒãCRC32‚Ìæ“¾
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
-	 * @param FilterManagerContext ƒtƒBƒ‹ƒ^ƒ}ƒl[ƒWƒƒƒRƒ“ƒeƒLƒXƒg
-	 * @return CRC32’l
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®Filteré©ç”¨å¾ŒCRC32ã®å–å¾—
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
+	 * @param FilterManagerContext ãƒ•ã‚£ãƒ«ã‚¿ãƒãƒãƒ¼ã‚¸ãƒ£ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
+	 * @return CRC32å€¤
 	 */
-	long __stdcall HTTPGetFilteredCRC32(void* httpContext,
+	long CALLDECL HTTPGetFilteredCRC32(void* httpContext,
 										void* filterManagerContext);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ğw’èƒtƒ@ƒCƒ‹‚Ö•Û‘¶‚·‚éB
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
-	 * @param filename •Û‘¶‚·‚éƒtƒ@ƒCƒ‹–¼
-	 * @return ¬Œ÷1A¸”s0‚ª‚©‚¦‚é
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã‚’æŒ‡å®šãƒ•ã‚¡ã‚¤ãƒ«ã¸ä¿å­˜ã™ã‚‹ã€‚
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
+	 * @param filename ä¿å­˜ã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«å
+	 * @return æˆåŠŸæ™‚1ã€å¤±æ•—æ™‚0ãŒã‹ãˆã‚‹
 	 */
-	long __stdcall HTTPContentsSave(void* HttpContext, const char* filename);
+	long CALLDECL HTTPContentsSave(void* HttpContext, const char* filename);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚Ì’·‚³‚ğæ“¾‚·‚é
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
-	 * @return WebƒRƒ“ƒeƒ“ƒc‚Ì’·‚³
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®é•·ã•ã‚’å–å¾—ã™ã‚‹
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
+	 * @return Webã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®é•·ã•
 	 */
-	long __stdcall HTTPGetContentsLength(void* HttpContext);
+	long CALLDECL HTTPGetContentsLength(void* HttpContext);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ğæ“¾‚·‚é
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
-	 * @param buffer ƒRƒ“ƒeƒ“ƒc‚ğó‚¯æ‚éƒoƒbƒtƒ@
-	 * @oaram length ƒoƒbƒtƒ@‚Ì’·‚³
-	 * @return WebƒRƒ“ƒeƒ“ƒc‚Ì’·‚³
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã‚’å–å¾—ã™ã‚‹
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
+	 * @param buffer ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡
+	 * @oaram length ãƒãƒƒãƒ•ã‚¡ã®é•·ã•
+	 * @return Webã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®é•·ã•
 	 */
-	long __stdcall HTTPGetResource(void* HttpContext,
+	long CALLDECL HTTPGetResource(void* HttpContext,
 								   char* buffer,
 								   const int length);
 
 	/**
-	 * æ“¾‚µ‚½WebƒRƒ“ƒeƒ“ƒc‚ğŠJ•ú‚·‚é
-	 * @param HttpContext HTTPGetContents()‚Ì–ß‚è’l
+	 * å–å¾—ã—ãŸWebã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã‚’é–‹æ”¾ã™ã‚‹
+	 * @param HttpContext HTTPGetContents()ã®æˆ»ã‚Šå€¤
 	 */
-	void __stdcall HTTPClose(void* HttpContext);
+	void CALLDECL HTTPClose(void* HttpContext);
 
 	/**
-	 * ³‹K•\Œ»ƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é
-	 * @param pattern ³‹K•\Œ»ƒpƒ^[ƒ“
-	 * @return ³‹K•\Œ»ƒIƒuƒWƒFƒNƒgƒRƒ“ƒeƒLƒXƒgBNULL‚Ìê‡Apattern‚ª•s³
+	 * æ­£è¦è¡¨ç¾ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹
+	 * @param pattern æ­£è¦è¡¨ç¾ãƒ‘ã‚¿ãƒ¼ãƒ³
+	 * @return æ­£è¦è¡¨ç¾ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã€‚NULLã®å ´åˆã€patternãŒä¸æ­£
 	 */
-	void* __stdcall RegexCompile(const char* pattern);
+	void* CALLDECL RegexCompile(const char* pattern);
 
 	/**
-	 * ³‹K•\Œ»ƒ}ƒbƒ`‚ğs‚¤
-	 * @param regexContext ³‹K•\Œ»ƒRƒ“ƒeƒLƒXƒgBRegexCompile()‚Ì–ß‚è’l
-	 * @param HttpContext HTTPæ“¾ƒRƒ“ƒeƒLƒXƒgBHTTPGetContents()‚Ì–ß‚è’l 
-	 * @param buffer ƒ}ƒbƒ`Œ‹‰Ê‚ğó‚¯æ‚éƒoƒbƒtƒ@ 
-	 * @param length ó‚¯æ‚éƒoƒbƒtƒ@‚Ì’·‚³
-	 * @param ignoreCase ƒ}ƒbƒ`‚É‘å•¶š¬•¶š‚ğ–³‹‚·‚éê‡A”ñƒ[ƒ
+	 * æ­£è¦è¡¨ç¾ãƒãƒƒãƒã‚’è¡Œã†
+	 * @param regexContext æ­£è¦è¡¨ç¾ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã€‚RegexCompile()ã®æˆ»ã‚Šå€¤
+	 * @param HttpContext HTTPå–å¾—ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã€‚HTTPGetContents()ã®æˆ»ã‚Šå€¤ 
+	 * @param buffer ãƒãƒƒãƒçµæœã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ 
+	 * @param length å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ã®é•·ã•
+	 * @param ignoreCase ãƒãƒƒãƒæ™‚ã«å¤§æ–‡å­—å°æ–‡å­—ã‚’ç„¡è¦–ã™ã‚‹å ´åˆã€éã‚¼ãƒ­
 	 */
-	long __stdcall RegexMatcher(void* regexContext, void* thereadHandle,
+	long CALLDECL RegexMatcher(void* regexContext, void* thereadHandle,
 								char* buffer, const int length,
 								const int ignoreCase);
 
 	/**
-	 * ³‹K•\Œ»ƒ}ƒbƒ`‚ğs‚¤
-	 * @param regexContext ³‹K•\Œ»ƒRƒ“ƒeƒLƒXƒgBRegexCompile()‚Ì–ß‚è’l
-	 * @param targetString ŒŸõ‘ÎÛ‚Ì•¶š—ñ
-	 * @param buffer ƒ}ƒbƒ`Œ‹‰Ê‚ğó‚¯æ‚éƒoƒbƒtƒ@ 
-	 * @param length ó‚¯æ‚éƒoƒbƒtƒ@‚Ì’·‚³
-	 * @param ignoreCase ƒ}ƒbƒ`‚É‘å•¶š¬•¶š‚ğ–³‹‚·‚éê‡A”ñƒ[ƒ
+	 * æ­£è¦è¡¨ç¾ãƒãƒƒãƒã‚’è¡Œã†
+	 * @param regexContext æ­£è¦è¡¨ç¾ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã€‚RegexCompile()ã®æˆ»ã‚Šå€¤
+	 * @param targetString æ¤œç´¢å¯¾è±¡ã®æ–‡å­—åˆ—
+	 * @param buffer ãƒãƒƒãƒçµæœã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ 
+	 * @param length å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ã®é•·ã•
+	 * @param ignoreCase ãƒãƒƒãƒæ™‚ã«å¤§æ–‡å­—å°æ–‡å­—ã‚’ç„¡è¦–ã™ã‚‹å ´åˆã€éã‚¼ãƒ­
 	 */
-	long __stdcall RegexMatchFromString(void* regexContext,
+	long CALLDECL RegexMatchFromString(void* regexContext,
 										const char* targetString,
 										char* buffer,
 										const int length,
 										const int ignoreCase);
 
 	/**
-	 * ³‹K•\Œ»ƒ}ƒbƒ`‚©‚çƒ}ƒbƒ`•”•ª‚ğæ‚èo‚·
-	 * @param regexContext ³‹K•\Œ»ƒRƒ“ƒeƒLƒXƒgBRegexCompile()‚Ì–ß‚è’l
-	 * @param sourceString ³‹K•\Œ»ƒ}ƒbƒ`‚Åg‚Á‚½ŒŸõ‘ÎÛ‚Ì•¶š—ñ
-	 * @param groupNumber ³‹K•\Œ»ƒpƒ^[ƒ“‚Å—^‚¦‚½ƒOƒ‹[ƒv'(', ')'‚ÌƒyƒA”Ô†B
-	 * ‘S‘Ìƒ}ƒbƒ`‚ª0”ÔAƒpƒ^[ƒ“‚Ì¶‘¤‚©‚ç‘Î‰‚·‚éŠJ‚«Š‡ŒÊ‚²‚Æ‚É1, 2, 3,EEE
-	 * ‚Æ‚¢‚¤‚æ‚¤‚ÉU‚ç‚ê‚éB
-	 * @param buffer ƒ}ƒbƒ`Œ‹‰Ê‚ğó‚¯æ‚éƒoƒbƒtƒ@ 
-	 * @param length ó‚¯æ‚éƒoƒbƒtƒ@‚Ì’·‚³
-	 * @return “K‡‚µ‚½•¶š‚Ì’·‚³BgroupNumber‚ª”ÍˆÍŠO‚Ìê‡A-1B
+	 * æ­£è¦è¡¨ç¾ãƒãƒƒãƒã‹ã‚‰ãƒãƒƒãƒéƒ¨åˆ†ã‚’å–ã‚Šå‡ºã™
+	 * @param regexContext æ­£è¦è¡¨ç¾ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã€‚RegexCompile()ã®æˆ»ã‚Šå€¤
+	 * @param sourceString æ­£è¦è¡¨ç¾ãƒãƒƒãƒã§ä½¿ã£ãŸæ¤œç´¢å¯¾è±¡ã®æ–‡å­—åˆ—
+	 * @param groupNumber æ­£è¦è¡¨ç¾ãƒ‘ã‚¿ãƒ¼ãƒ³ã§ä¸ãˆãŸã‚°ãƒ«ãƒ¼ãƒ—'(', ')'ã®ãƒšã‚¢ç•ªå·ã€‚
+	 * å…¨ä½“ãƒãƒƒãƒãŒ0ç•ªã€ãƒ‘ã‚¿ãƒ¼ãƒ³ã®å·¦å´ã‹ã‚‰å¯¾å¿œã™ã‚‹é–‹ãæ‹¬å¼§ã”ã¨ã«1, 2, 3,ãƒ»ãƒ»ãƒ»
+	 * ã¨ã„ã†ã‚ˆã†ã«æŒ¯ã‚‰ã‚Œã‚‹ã€‚
+	 * @param buffer ãƒãƒƒãƒçµæœã‚’å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ 
+	 * @param length å—ã‘å–ã‚‹ãƒãƒƒãƒ•ã‚¡ã®é•·ã•
+	 * @return é©åˆã—ãŸæ–‡å­—ã®é•·ã•ã€‚groupNumberãŒç¯„å›²å¤–ã®å ´åˆã€-1ã€‚
 	 */
-	long __stdcall RegexMatchedString(void* regexContext,
+	long CALLDECL RegexMatchedString(void* regexContext,
 									  const char* sourceString,
 									  const int groupNumber,
 									  char* buffer,
 									  const int length);
 
 	/**
-	 * ³‹K•\Œ»ƒRƒ“ƒeƒLƒXƒg‚Ì”jŠü
-	 * @param regexContext ³‹K•\Œ»ƒRƒ“ƒeƒLƒXƒgBRegexCompile()‚Ì–ß‚è’l
+	 * æ­£è¦è¡¨ç¾ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ç ´æ£„
+	 * @param regexContext æ­£è¦è¡¨ç¾ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã€‚RegexCompile()ã®æˆ»ã‚Šå€¤
 	 */
-	void __stdcall RegexTerminate(void* regexContext);
+	void CALLDECL RegexTerminate(void* regexContext);
 
 
 	/**
-	 * ƒtƒBƒ‹ƒ^ƒ}ƒl[ƒWƒƒ‚Ìì¬
-	 * @return ƒtƒBƒ‹ƒ^ƒ}ƒl[ƒWƒƒƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹
+	 * ãƒ•ã‚£ãƒ«ã‚¿ãƒãƒãƒ¼ã‚¸ãƒ£ã®ä½œæˆ
+	 * @return ãƒ•ã‚£ãƒ«ã‚¿ãƒãƒãƒ¼ã‚¸ãƒ£ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«
 	 */
-	void* __stdcall FilterManagerCreate();
+	void* CALLDECL FilterManagerCreate();
 
 	/**
-	 * “K‡ƒtƒBƒ‹ƒ^‚Ìæ“¾
-	 * @param managerContext ƒtƒBƒ‹ƒ^ƒ}ƒl[ƒWƒƒƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹B
-	 * @param url ƒtƒBƒ‹ƒ^‚ğ“K—p‚·‚éURL
-	 * @return ƒtƒBƒ‹ƒ^ƒnƒ“ƒhƒ‹B
+	 * é©åˆãƒ•ã‚£ãƒ«ã‚¿ã®å–å¾—
+	 * @param managerContext ãƒ•ã‚£ãƒ«ã‚¿ãƒãƒãƒ¼ã‚¸ãƒ£ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«ã€‚
+	 * @param url ãƒ•ã‚£ãƒ«ã‚¿ã‚’é©ç”¨ã™ã‚‹URL
+	 * @return ãƒ•ã‚£ãƒ«ã‚¿ãƒãƒ³ãƒ‰ãƒ«ã€‚
 	 */
-	void* __stdcall FilterGetFilters(void* managerContext, const char* url);
+	void* CALLDECL FilterGetFilters(void* managerContext, const char* url);
 
 	/**
-	 * “K‡ƒtƒBƒ‹ƒ^‚Ì”jŠü
-	 * @param filterHandle FiltergetFilters()‚Åæ“¾‚µ‚½ƒtƒBƒ‹ƒ^ƒnƒ“ƒhƒ‹
+	 * é©åˆãƒ•ã‚£ãƒ«ã‚¿ã®ç ´æ£„
+	 * @param filterHandle FiltergetFilters()ã§å–å¾—ã—ãŸãƒ•ã‚£ãƒ«ã‚¿ãƒãƒ³ãƒ‰ãƒ«
 	 */
-	void __stdcall FilterRemoveFilters(void* filterHandle);
+	void CALLDECL FilterRemoveFilters(void* filterHandle);
 
 	/**
-	 * ƒtƒBƒ‹ƒ^‚Ì“K—p
-	 * @param filterHandle FiltergetFilters()‚Åæ“¾‚µ‚½ƒtƒBƒ‹ƒ^ƒnƒ“ƒhƒ‹
-	 * @param contents ƒRƒ“ƒeƒ“ƒc•¶š—ñBHTTPGetResource()‚Åæ“¾‚µ‚½•¨B
-	 * @return ƒtƒBƒ‹ƒ^‚ğ“K—p‚µ‚½Œã‚ÌƒTƒCƒYB
-	 * @note •ÏŠ·Œã‚Ì•¶š—ñ‚Ícontents‚Éã‘‚«‚³‚ê‚Ü‚·B
+	 * ãƒ•ã‚£ãƒ«ã‚¿ã®é©ç”¨
+	 * @param filterHandle FiltergetFilters()ã§å–å¾—ã—ãŸãƒ•ã‚£ãƒ«ã‚¿ãƒãƒ³ãƒ‰ãƒ«
+	 * @param contents ã‚³ãƒ³ãƒ†ãƒ³ãƒ„æ–‡å­—åˆ—ã€‚HTTPGetResource()ã§å–å¾—ã—ãŸç‰©ã€‚
+	 * @return ãƒ•ã‚£ãƒ«ã‚¿ã‚’é©ç”¨ã—ãŸå¾Œã®ã‚µã‚¤ã‚ºã€‚
+	 * @note å¤‰æ›å¾Œã®æ–‡å­—åˆ—ã¯contentsã«ä¸Šæ›¸ãã•ã‚Œã¾ã™ã€‚
 	 */
-	long __stdcall FilterApply(void* filterHandle, char* contents);
+	long CALLDECL FilterApply(void* filterHandle, char* contents);
 
 	/**
-	 * ƒtƒBƒ‹ƒ^ƒ}ƒl[ƒWƒƒ‚Ì”jŠü
-	 * @param managerContext ƒtƒBƒ‹ƒ^ƒ}ƒl[ƒWƒƒƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹B
-	 * FilterManagerCreate()‚Ì–ß‚è’l
+	 * ãƒ•ã‚£ãƒ«ã‚¿ãƒãƒãƒ¼ã‚¸ãƒ£ã®ç ´æ£„
+	 * @param managerContext ãƒ•ã‚£ãƒ«ã‚¿ãƒãƒãƒ¼ã‚¸ãƒ£ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«ã€‚
+	 * FilterManagerCreate()ã®æˆ»ã‚Šå€¤
 	 */
-	void __stdcall FilterManagerTerminate(void* managerContext);
+	void CALLDECL FilterManagerTerminate(void* managerContext);
 
 	
 	/*
-	 * DLLˆ—ƒRƒ“ƒeƒLƒXƒg‚Ìì¬
-	 * @return DLLˆ—ƒRƒ“ƒeƒLƒXƒg
+	 * DLLå‡¦ç†ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ä½œæˆ
+	 * @return DLLå‡¦ç†ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
 	 */
-	void* __stdcall WWWInit();
+	void* CALLDECL WWWInit();
 
 	/**
-	 * DLLˆ—ƒRƒ“ƒeƒLƒXƒg‚Ì”jŠü
-	 * @param contextHandle DLLˆ—ƒRƒ“ƒeƒLƒXƒgBWWWInit()‚Ì–ß‚è’l
+	 * DLLå‡¦ç†ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ç ´æ£„
+	 * @param contextHandle DLLå‡¦ç†ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã€‚WWWInit()ã®æˆ»ã‚Šå€¤
 	 */
-	void __stdcall WWWTerminate(void* contextHandle);
+	void CALLDECL WWWTerminate(void* contextHandle);
 
 
 #ifdef __cplusplus
 }
-#endif 
+#endif /* __cplusplus */
 
-#endif
+#endif /* WWWDLL_H_ */

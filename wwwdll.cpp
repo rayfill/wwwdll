@@ -1,13 +1,95 @@
-#include "filter.hpp"
 #include <net/HTTPClient.hpp>
 #include <util/CRC.hpp>
-#include <Thread/ThreadPool.hpp>
+#include <Thread/RerunnableThread.hpp>
 #include <text/regex/RegexCompile.hpp>
+#include "Filter.hpp"
+
 #include <cassert>
 #include <fstream>
 #include "wwwdll.h"
 
-typedef ThreadPool<>::RerunnableThread thread_t;
+#include <iostream>
+
+typedef RerunnableThread thread_t;
+
+
+#ifdef WIN32
+struct AfterNotify
+{
+	HWND hWnd;
+	unsigned int message;
+
+	AfterNotify():
+		hWnd(), message()
+	{}
+
+	AfterNotify(HWND hWnd_, unsigned int message_):
+		hWnd(hWnd_), message(message_)
+	{}
+
+	AfterNotify(const AfterNotify& src):
+		hWnd(src.hWnd), message(src.message)
+	{}
+
+	AfterNotify& operator=(const AfterNotify& src)
+	{
+		if (&src != *this)
+		{
+			hWnd = src.hWnd;
+			message = src.message;
+		}
+
+		return *this;
+	}
+
+	void operator()(bool result, thread_t* threadContext)
+	{
+		if (message == 0)
+			return;
+
+		PostMessage(hWnd, message,
+					static_cast<WPARAM>(result),
+					reinterpret_cast<LPARAM>(threadContext));
+	}
+};
+#else
+struct AfterNotify
+{
+	Callback func;
+
+	AfterNotify():
+		func(NULL)
+	{}
+
+	AfterNotify(const AfterNotify& src):
+		func(src.func)
+	{}
+
+	AfterNotify(Callback function):
+		func(function)
+	{}
+
+	AfterNotify& operator=(const AfterNotify& src)
+	{
+		if(&src != this)
+		{
+			func = src.func;
+		}
+
+		return *this;
+	}
+
+	void operator()(bool result, thread_t* threadContext)
+	{
+		if (func == NULL)
+			return;
+
+		func(result, threadContext);
+	}
+};
+#endif /* WIN32 */
+
+template <typename AfterFunctor>
 class HTTPContext : public Runnable
 {
 private:
@@ -15,10 +97,9 @@ private:
 	std::string cookie;
 	std::string userAgent;
 	const long timeout;
-	HWND hWnd;
-	unsigned int message;
 	HTTPResult<> result;
 	thread_t* threadContext;
+	AfterFunctor functor;
 
 	bool getContents()
 	{
@@ -41,9 +122,9 @@ private:
 			result = client.getResource(url.c_str());
 
 		}
-		catch (std::exception& /*e*/)
+		catch (std::exception& e)
 		{
-//			std::cerr << e.what() << std::endl;
+			std::cerr << e.what() << std::endl;
 			return false;
 		}
 		catch (...)
@@ -54,19 +135,14 @@ private:
 	}
 
 public:
+	void setFunctor(const AfterFunctor& newFunctor)
+	{
+		functor = newFunctor;
+	}
+
 	std::string getURL() const
 	{
 		return this->url;
-	}
-
-	void setHWnd(HWND hWnd_)
-	{
-		this->hWnd = hWnd_;
-	}
-
-	void setMessage(const unsigned int message_)
-	{
-		this->message = message_;
 	}
 
 	std::string getLastModified() const
@@ -95,19 +171,17 @@ public:
 	}
 
 	HTTPContext(const char* url_,
-					 const char* cookie_,
-					 const char* userAgent_,
-					 const long timeout_,
-					 HWND hWnd_ = NULL,
-					 unsigned int message_ = 0):
+				const char* cookie_,
+				const char* userAgent_,
+				const long timeout_,
+				AfterFunctor functor_):
 		url(url_),
 		cookie(cookie_ == NULL ? "" : cookie_),
 		userAgent(userAgent_ == NULL ? "" : userAgent_),
 		timeout(timeout_),
-		hWnd(hWnd_),
-		message(message_),
 		result(),
-		threadContext()
+		threadContext(),
+		functor(functor_)
 	{}
 
 	virtual ~HTTPContext() throw ()
@@ -136,10 +210,7 @@ public:
 		{
 			result = this->getContents();
 
-			if (hWnd != NULL)
-				PostMessage(hWnd, message,
-							static_cast<WPARAM>(result),
-							reinterpret_cast<LPARAM>(this->getThreadContext()));
+			functor(result, this->getThreadContext());
 		}
 		catch(std::exception& e)
 		{
@@ -147,41 +218,58 @@ public:
 		}
 		catch(...)
 		{
-			//std::cerr << "unknown exception raised." << std::endl;
+			std::cerr << "unknown exception raised." << std::endl;
 		}
 
 		return result;
 	}
 };
 
-void* __stdcall ThreadCreate()
+void* CALLDECL ThreadCreate()
 {
 	return new thread_t;
 }
 
-void __stdcall ThreadStart(void* context,
+#ifdef WIN32
+void CALLDECL ThreadStart(void* context,
 						   void* httpContext,
 						   HWND hWnd,
 						   const unsigned int message)
 {
 	thread_t* thread = reinterpret_cast<thread_t*>(context);
-	HTTPContext* httpObject = reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* httpObject =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 	
-	httpObject->setHWnd(hWnd);
-	httpObject->setMessage(message);
+	httpObject->setFunctor(AfterNotify(hWnd, message));
+	httpObject->setThreadContext(thread);
+
+	thread->start(httpObject);
+}
+#else
+void CALLDECL ThreadStart(void* context,
+						   void* httpContext,
+						   Callback function)
+{
+	thread_t* thread = reinterpret_cast<thread_t*>(context);
+	HTTPContext<AfterNotify>* httpObject =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
+
+	httpObject->setFunctor(AfterNotify(function));
 	httpObject->setThreadContext(thread);
 
 	thread->start(httpObject);
 }
 
-long __stdcall ThreadJoin(void* threadContext)
+#endif /* WIN32 */
+
+long CALLDECL ThreadJoin(void* threadContext)
 {
 	thread_t* thread = reinterpret_cast<thread_t*>(threadContext);
 
 	return thread->join();
 }
 
-void __stdcall ThreadClose(void* threadContext)
+void CALLDECL ThreadClose(void* threadContext)
 {
 	thread_t* thread = reinterpret_cast<thread_t*>(threadContext);
 
@@ -190,7 +278,7 @@ void __stdcall ThreadClose(void* threadContext)
 	delete thread;
 }
 
-void* __stdcall HTTPCreateContext(const char* url,
+void* CALLDECL HTTPCreateContext(const char* url,
 								  const char* cookie,
 								  const char* userAgent,
 								  const long timeout)
@@ -198,15 +286,16 @@ void* __stdcall HTTPCreateContext(const char* url,
 	assert(url != NULL);
 
 	Runnable* target =
-		new HTTPContext(url,
-						cookie,
-						userAgent,
-						timeout);
+		new HTTPContext<AfterNotify>(url,
+									 cookie,
+									 userAgent,
+									 timeout,
+									 AfterNotify());
 
 	return target;
 }
 
-void* __stdcall HTTPGetContentsSync(const char* url,
+void* CALLDECL HTTPGetContentsSync(const char* url,
 									const char* cookie,
 									const char* userAgent,
 									const long timeout,
@@ -216,24 +305,23 @@ void* __stdcall HTTPGetContentsSync(const char* url,
 	assert(result != NULL);
 
 	Runnable* target =
-		new HTTPContext(url,
-						cookie,
-						userAgent,
-						timeout,
-						NULL,
-						0);
+		new HTTPContext<AfterNotify>(url,
+									 cookie,
+									 userAgent,
+									 timeout,
+									 AfterNotify());
 
 	*result = target->run();
 	return target;
 }
 
-int __stdcall HTTPGetURL(void* httpContext, char* url, const int length)
+int CALLDECL HTTPGetURL(void* httpContext, char* url, const int length)
 {
 	assert(url != NULL);
 	assert(length >= 0);
 
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	std::string targetUrl = target->getURL();
 	if (targetUrl.length() <= static_cast<size_t>(length))
@@ -246,11 +334,11 @@ int __stdcall HTTPGetURL(void* httpContext, char* url, const int length)
 	return static_cast<int>(targetUrl.length());
 }
 
-long __stdcall HTTPGetLastModified(void* httpContext,
+long CALLDECL HTTPGetLastModified(void* httpContext,
 								   char* buffer, const int length)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	const std::string lastModified = target->getLastModified();
 	if (buffer == NULL ||
@@ -264,27 +352,27 @@ long __stdcall HTTPGetLastModified(void* httpContext,
 	return static_cast<long>(lastModified.size());
 }
 
-long __stdcall HTTPGetResponseCode(void* httpContext)
+long CALLDECL HTTPGetResponseCode(void* httpContext)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	return target->getResponseCode();
 }
 
-long __stdcall HTTPGetCRC32(void* httpContext)
+long CALLDECL HTTPGetCRC32(void* httpContext)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	return target->getCRC32();
 }
 
-long __stdcall HTTPGetFilteredCRC32(void* httpContext,
+long CALLDECL HTTPGetFilteredCRC32(void* httpContext,
 									void* managerContext)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	void* filter =
 		FilterGetFilters(managerContext, target->getURL().c_str());
@@ -302,7 +390,7 @@ long __stdcall HTTPGetFilteredCRC32(void* httpContext,
 	return crc32;
 }
 
-long __stdcall HTTPGetCRC32FromString(const char* buffer)
+long CALLDECL HTTPGetCRC32FromString(const char* buffer)
 {
 	CRC32 digester;
 
@@ -311,10 +399,10 @@ long __stdcall HTTPGetCRC32FromString(const char* buffer)
 	return static_cast<long>(digester.getDigest());
 }
 
-long __stdcall HTTPContentsSave(void* httpContext, const char* filename)
+long CALLDECL HTTPContentsSave(void* httpContext, const char* filename)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	std::ofstream ofs(filename,
 					  std::ios::binary | std::ios::out | std::ios::trunc);
@@ -326,20 +414,20 @@ long __stdcall HTTPContentsSave(void* httpContext, const char* filename)
 	return 1;
 }
 
-long __stdcall HTTPGetContentsLength(void* httpContext)
+long CALLDECL HTTPGetContentsLength(void* httpContext)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	return static_cast<long>(target->getContentsString().length());
 }
 
-long __stdcall HTTPGetResource(void* httpContext,
+long CALLDECL HTTPGetResource(void* httpContext,
 							   char* buffer,
 							   const int length)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	if (buffer == NULL)
 		return static_cast<long>(target->getContentsString().length());
@@ -355,15 +443,15 @@ long __stdcall HTTPGetResource(void* httpContext,
 	return static_cast<long>(contents.length());
 }
 
-void __stdcall HTTPClose(void* httpContext)
+void CALLDECL HTTPClose(void* httpContext)
 {
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	delete target;
 }
 
-void* __stdcall RegexCompile(const char* pattern)
+void* CALLDECL RegexCompile(const char* pattern)
 {
 	RegexCompiler<char> compiler;
 	RegexMatch<char>* matcher = NULL;
@@ -380,14 +468,14 @@ void* __stdcall RegexCompile(const char* pattern)
 	return matcher;
 }
 
-long __stdcall RegexMatcher(void* regexContext, void* httpContext,
+long CALLDECL RegexMatcher(void* regexContext, void* httpContext,
 							char* buffer, const int length,
 							const int ignoreCase)
 {
 	RegexMatch<char>* matcher =
 		reinterpret_cast<RegexMatch<char>*>(regexContext);
-	HTTPContext* target =
-		reinterpret_cast<HTTPContext*>(httpContext);
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
 
 	std::string source = target->getContentsString();
 	if (!matcher->match(source, ignoreCase != 0))
@@ -405,7 +493,7 @@ long __stdcall RegexMatcher(void* regexContext, void* httpContext,
 	return static_cast<long>(matchedStr.length());
 }
 
-long __stdcall RegexMatchFromString(void* regexContext,
+long CALLDECL RegexMatchFromString(void* regexContext,
 									const char* targetString,
 									char* buffer,
 									const int length,
@@ -430,7 +518,7 @@ long __stdcall RegexMatchFromString(void* regexContext,
 	return static_cast<long>(matchedStr.length());
 }
 
-long __stdcall RegexMatchedString(void* regexContext,
+long CALLDECL RegexMatchedString(void* regexContext,
 								  const char* sourceString,
 								  const int groupNumber,
 								  char* buffer,
@@ -454,7 +542,7 @@ long __stdcall RegexMatchedString(void* regexContext,
 	return static_cast<long>(result.size());
 }
 
-void __stdcall RegexTerminate(void* regexContext)
+void CALLDECL RegexTerminate(void* regexContext)
 {
 	RegexMatch<char>* matcher =
 		reinterpret_cast<RegexMatch<char>*>(regexContext);
@@ -464,7 +552,7 @@ void __stdcall RegexTerminate(void* regexContext)
 
 using namespace Filter;
 
-void* __stdcall FilterManagerCreate()
+void* CALLDECL FilterManagerCreate()
 {
 	FilterLoader loader("filter.txt");
 	FilterManager* manager = new FilterManager();
@@ -475,7 +563,7 @@ void* __stdcall FilterManagerCreate()
 	return manager;
 }
 
-void* __stdcall FilterGetFilters(void* managerContext, const char* url)
+void* CALLDECL FilterGetFilters(void* managerContext, const char* url)
 {
 	FilterManager* manager = 
 		reinterpret_cast<FilterManager*>(managerContext);
@@ -483,7 +571,7 @@ void* __stdcall FilterGetFilters(void* managerContext, const char* url)
 	return new std::vector<Executor*>(manager->getExecutors(url));
 }
 
-void __stdcall FilterRemoveFilters(void* filterHandle)
+void CALLDECL FilterRemoveFilters(void* filterHandle)
 {
 	std::vector<Executor*>* executors =
 		reinterpret_cast<std::vector<Executor*>*>(filterHandle);
@@ -491,7 +579,7 @@ void __stdcall FilterRemoveFilters(void* filterHandle)
 	delete executors;
 }
 
-long __stdcall FilterApply(void* filterHandle, char* contents)
+long CALLDECL FilterApply(void* filterHandle, char* contents)
 {
 	assert(filterHandle != NULL);
 	assert(contents != NULL);
@@ -510,10 +598,10 @@ long __stdcall FilterApply(void* filterHandle, char* contents)
 // 		*contents++ = *itor++;
 
 	/**
-	 * Ç«Å[Ç‡iteratorÇ≈âÒÇ∑Ç∆Ç÷ÇÒÇ»ÉRÅ[Éhê∂ê¨Ç∑ÇÈÇ›ÇΩÇ¢ÅEÅEÅE
-	 * ä®ïŸÇµÇƒÇ≠ÇÍ•••
-	 * ÇÒÅ[ÅA_S_createÇ™Ç±ÇØÇΩÇÃÇ…ó·äOà¨ÇËÇ¬Ç‘ÇµÇƒÇΩÇ«ÇË
-	 * íÖÇ¢ÇƒÇÈÇÃÇ©Ç»Çü•••
+	 * „Å©„Éº„ÇÇiterator„ÅßÂõû„Åô„Å®„Å∏„Çì„Å™„Ç≥„Éº„ÉâÁîüÊàê„Åô„Çã„Åø„Åü„ÅÑ„Éª„Éª„Éª
+	 * ÂãòÂºÅ„Åó„Å¶„Åè„ÇåÔΩ•ÔΩ•ÔΩ•
+	 * „Çì„Éº„ÄÅ_S_create„Åå„Åì„Åë„Åü„ÅÆ„Å´‰æãÂ§ñÊè°„Çä„Å§„Å∂„Åó„Å¶„Åü„Å©„Çä
+	 * ÁùÄ„ÅÑ„Å¶„Çã„ÅÆ„Åã„Å™„ÅÅÔΩ•ÔΩ•ÔΩ•
 	 */
 	for (size_t offset = 0; offset < target.length(); ++offset)
 		contents[offset] = target[offset];
@@ -521,7 +609,7 @@ long __stdcall FilterApply(void* filterHandle, char* contents)
 	return static_cast<long>(target.length());
 }
 
-void __stdcall FilterManagerTerminate(void* managerContext)
+void CALLDECL FilterManagerTerminate(void* managerContext)
 {
 	FilterManager* manager = 
 		reinterpret_cast<FilterManager*>(managerContext);
@@ -529,12 +617,12 @@ void __stdcall FilterManagerTerminate(void* managerContext)
 	delete manager;
 }
 
-void* __stdcall WWWInit()
+void* CALLDECL WWWInit()
 {
 	return new SocketModule();
 }
 
-void __stdcall WWWTerminate(void* contextHandle)
+void CALLDECL WWWTerminate(void* contextHandle)
 {
 	SocketModule* handle = reinterpret_cast<SocketModule*>(contextHandle);
 

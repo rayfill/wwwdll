@@ -43,8 +43,8 @@ struct Info
 };
 
 const char* urlList[] = {
-// 	"http://www80.sakura.ne.jp/~noantica/index2.htm",
-// 	"http://www.geocities.co.jp/Playtown/3932/",
+	"http://www80.sakura.ne.jp/~noantica/index2.htm",
+	"http://www.geocities.co.jp/Playtown/3932/",
 	"http://www.kowroo.net/birne/index.htm",
 	"http://misoodenn.web.fc2.com/main.html",
 	"http://www.studiomilk.com/akachanclub/top.html",

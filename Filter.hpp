@@ -257,9 +257,10 @@ namespace Filter
 				return "remove";
 			case removeAll:
 				return "removeAll";
+			default:
+				assert(false);
 			}
 
-			assert(false);
 			return "";
 		}
 
