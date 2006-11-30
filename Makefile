@@ -3,27 +3,27 @@ CXX=/cygdrive/c/MinGW/bin/g++
 DLLWRAP=/cygdrive/c/MinGW/bin/dllwrap
 DLLTOOL=/cygdrive/c/MinGW/bin/dlltool
 DEPENDS_DIR=../cpp_lib
-
+CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0500 -D_REENTRANT -mthreads
 .PHONY: strip clean depends
 
 test: wwwdll.dll wwwdlltest
 	./wwwdlltest.exe 300 http://www.geocities.jp/hazimes316/top.htm
 
 filterTest: FilterTest.cpp Filter.hpp
-	$(CXX) -g -Wall -I. $(INCLUDES) -I$(DEPENDS_DIR) -o filterTest FilterTest.cpp $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -o filterTest FilterTest.cpp $(LIBS)
 
 debug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGMAIN -g -Wall -I. $(INCLUDES) -I$(DEPENDS) -o debugmain wwwdll.cpp -lwsock32 $(LIB_PATH)  $(LIBS)
+	$(CXX) -DDEBUGMAIN $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS) -o debugmain wwwdll.cpp -lws2_32 $(LIB_PATH)  $(LIBS)
 
 windebug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGWINMAIN  -D_WIN32 -D__USE_W32_SOCKETS -mthreads -mwindows -g -Wall -I. $(INCLUDES) -I$(DEPENDS_DIR) -o debugwinmain wwwdll.cpp -lwsock32 $(LIB_PATH)  $(LIBS)
+	$(CXX) -DDEBUGWINMAIN $(CXXFLAGS) -mwindows $(INCLUDES) -I$(DEPENDS_DIR) -o debugwinmain wwwdll.cpp -lws2_32 $(LIB_PATH)  $(LIBS)
 
 
 wwwdll.o: wwwdll.cpp
-	$(CXX) -DNDEBUG -Wall  -mthreads -I. $(INCLUDES) -I$(DEPENDS_DIR) -c wwwdll.cpp
+	$(CXX) -DNDEBUG -Wall $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -c wwwdll.cpp
 
 wwwdll.dll: wwwdll.o wwwdll.def
-	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)`  -mthreads -o wwwdll.dll wwwdll.o -lwsock32 $(LIB_PATH)  $(LIBS)
+	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)`  -mthreads -o wwwdll.dll wwwdll.o -lws2_32 $(LIB_PATH)  $(LIBS)
 
 libwwwdll.a: wwwdll.dll wwwdll.def
 	$(DLLTOOL) -k --def wwwdll.def --dllname wwwdll.dll --output-lib libwwwdll.a
@@ -35,10 +35,10 @@ strip:
 	strip wwwdll.dll wwwdlltest.exe
 
 wwwdlltest: wwwdlltest.cpp libwwwdll.a
-	$(CXX) -g  -DDEBUGMAIN -I. $(INCLUDES) -I$(DEPENDS_DIR) -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
+	$(CXX) -g  -DDEBUGMAIN $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
 
 wwwdllwintest: libwwwdll.a
-	$(CXX) -g  -DDEBUGWINMAIN  -mthreads -mwindows -I. $(INCLUDES) -I$(DEPENDS_DIR) -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
+	$(CXX) -g  -DDEBUGWINMAIN $(CXXFLAGS) -mwindows $(INCLUDES) -I$(DEPENDS_DIR) -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
 
 depends:
 	cp ../cpp_lib/net/HTTPClient.hpp ./depends/net/HTTPClient.hpp

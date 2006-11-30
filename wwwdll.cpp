@@ -33,7 +33,7 @@ struct AfterNotify
 
 	AfterNotify& operator=(const AfterNotify& src)
 	{
-		if (&src != *this)
+		if (&src != this)
 		{
 			hWnd = src.hWnd;
 			message = src.message;
