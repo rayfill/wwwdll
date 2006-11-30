@@ -90,11 +90,11 @@ namespace Filter
 
 			do
 			{
-				current = subMatch(patternNumber + 1,
+				size_t subcurrent = subMatch(patternNumber + 1,
 								   current + currentPattern.length(),
 								   target);
-				if (current != std::string::npos)
-					return current;
+				if (subcurrent != std::string::npos)
+					return subcurrent;
 
 			} while ((current =
 					  target.find(currentPattern,

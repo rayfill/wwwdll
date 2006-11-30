@@ -15,8 +15,8 @@ clean:
 $(FILTERTEST): FilterTest.cpp Filter.hpp
 	$(CXX) -g -Wall $(DEPENDS_PATH) -o filterTest FilterTest.cpp
 
-$(TARGET): wwwdll.cpp wwwdll.h
-	$(CXX) -g -fPIC -Wall -shared -o libwwwdll.so $(DEPENDS_PATH) wwwdll.cpp
+$(TARGET): wwwdll.cpp wwwdll.h Filter.hpp
+	$(CXX) -g -fPIC -Wall -D_REENTRANT -shared -o libwwwdll.so $(DEPENDS_PATH) wwwdll.cpp -lpthread
 
 $(TEST): posixmain.cpp $(TARGET)
-	$(CXX) -g -Wall -Weffc++ $(DEPENDS_PATH) -o $(TEST) posixmain.cpp -L. -lwwwdll -lpthread
+	$(CXX) -g -Wall -Weffc++ $(DEPENDS_PATH) -o $(TEST) posixmain.cpp -L. -lwwwdll

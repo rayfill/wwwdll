@@ -216,10 +216,12 @@ public:
 		}
 		catch(std::exception& e)
 		{
+			functor(result, this->getThreadContext());
 			throw ThreadException(e.what());
 		}
 		catch(...)
 		{
+			functor(result, this->getThreadContext());
 			std::cerr << "unknown exception raised." << std::endl;
 		}
 

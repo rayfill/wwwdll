@@ -98,7 +98,8 @@ int main(int argc, char** argv)
 #ifdef DEBUGWINMAIN
 #include <text/LexicalCast.hpp>
 #include <text/regex/RegexCompile.hpp>
-#include <thread/CriticalSection.hpp>
+#include <Thread/CriticalSection.hpp>
+#include <Thread/ScopedLock.hpp>
 #include "item.hpp"
 #include <map>
 #include <fstream>
@@ -265,6 +266,7 @@ void updateCounter(HWND hWnd)
 std::vector<void*> threadHandler;
 std::vector<void*> waitableThreads;
 
+CriticalSection section;
 LRESULT CALLBACK WndProc(HWND hWnd,
 						 UINT message,
 						 WPARAM wParam,
@@ -284,7 +286,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 
 			case WM_KEYUP:
 			{
-				CriticalSection lock;
+				ScopedLock<CriticalSection> lock(section);
 				std::vector<Item>::iterator itor = find_uncheck_item();
 				if (itor != items.end() && waitableThreads.size() > 0)
 				{
@@ -336,7 +338,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 				httpContext = NULL;
 
 				{
-					CriticalSection lock;
+					ScopedLock<CriticalSection> lock(section);
 					std::vector<Item>::iterator itor = find_uncheck_item();
 					if (itor == items.end())
 					{

@@ -145,6 +145,8 @@ int main(int argc, char** argv)
 		void* httpContext = HTTPCreateContext(itor->url_check.c_str(),
 											  NULL, NULL, 20);
 		contextMap[thread] = httpContext;
+		std::cout << "thread: " << thread <<
+			"   context: " << httpContext << std::endl;
 		ThreadStart(thread, httpContext, handler);
 	}
 
@@ -159,6 +161,7 @@ int main(int argc, char** argv)
 			sigwait(&masking, &signalNum);
 			if (signalNum == SIGUSR1)
 			{
+				// signal一回で複数の待ちハンドラを処理した方が良さそう
 				ScopedLock<Mutex> lock(syncObject);
 				assert (idleThreads.size() > 0);
 				void* thread = idleThreads.back();
@@ -195,6 +198,8 @@ int main(int argc, char** argv)
 				HTTPCreateContext(itor->url_check.c_str(),
 								  NULL, NULL, 20);
 				contextMap[thread] = httpContext;
+				std::cout << "thread: " << thread <<
+					"   context: " << httpContext << std::endl;
 				ThreadStart(thread, httpContext, handler);
 			}
 		}
@@ -203,6 +208,7 @@ int main(int argc, char** argv)
 		for (int count = 0; count != wakeupThreads; ++count)
 		{
 			int signalNum = 0;
+			// signal一回で複数の待ちハンドラを処理した方が良さそう
 			sigwait(&masking, &signalNum);
 			ScopedLock<Mutex> lock(syncObject);
 			ThreadClose(idleThreads.back());
