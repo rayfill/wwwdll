@@ -91,6 +91,4 @@ struct Item
 			stringCast<int>(crc32) + separetor +
 			stringCast<size_t>(content_length) + separetor;
 	}
-
-
 };

@@ -134,6 +134,8 @@ private:
 		return true;
 	}
 
+	HTTPContext(const HTTPContext&);
+	HTTPContext& operator=(const HTTPContext&);
 public:
 	void setFunctor(const AfterFunctor& newFunctor)
 	{
