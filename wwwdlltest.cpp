@@ -267,6 +267,9 @@ std::vector<void*> threadHandler;
 std::vector<void*> waitableThreads;
 
 CriticalSection section;
+CriticalSection debugSec;
+static int postCount = 0;
+
 LRESULT CALLBACK WndProc(HWND hWnd,
 						 UINT message,
 						 WPARAM wParam,
@@ -309,6 +312,13 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 
 			case WM_USER+1:
 			{
+				{
+					ScopedLock<CriticalSection> lock(debugSec);
+					++postCount;
+					OutputDebugString((std::string("posted count of ") +
+							stringCast<int>(postCount)).c_str());
+				}
+
 				void* threadContext = reinterpret_cast<void*>(lParam);
 				ThreadJoin(threadContext);
 
