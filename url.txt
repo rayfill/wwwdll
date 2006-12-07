@@ -1,4 +1,5 @@
 check_flg	url	url_check	url_open	name	last_updated	last_visited	crc32	content_length	id
+	http://www.geocities.jp/hou_para/	http://www.geocities.jp/hou_para/top/mainpage.html	http://www.geocities.jp/hou_para/top/index.html	放課後パラダイス					
 	http://www.kowroo.net/	http://www.kowroo.net/birne/index.htm		上海蟹味噌團					
 	http://eco.ice.as/miso/	http://misoodenn.web.fc2.com/main.html		おでんや					
 	http://www.studiomilk.com/akachanclub/	http://www.studiomilk.com/akachanclub/top.html		Club-A					
@@ -14,7 +15,6 @@ check_flg	url	url_check	url_open	name	last_updated	last_visited	crc32	content_le
 	http://park17.wakwak.com/~fomalhaut/	http://park17.wakwak.com/~fomalhaut/		FOMALHAUT					
 	http://age13.chu.jp/	http://age13.chu.jp/		週刊わたしの１３歳					
 	http://age13.chu.jp/fatein/	http://age13.chu.jp/fatein/		Fate／in					
-	http://www.geocities.jp/hou_para/	http://www.geocities.jp/hou_para/top/mainpage.html	http://www.geocities.jp/hou_para/top/index.html	放課後パラダイス					
 	http://www.marimo.sakura.ne.jp/~jigen/DragonKitchen/	http://www.marimo.sakura.ne.jp/~jigen/DragonKitchen/		Dragon Kitchen					
 	http://www1.mint.or.jp/~nori-r/index.html	http://www1.mint.or.jp/~nori-r/index.html		VTEC					
 	http://www3.ocn.ne.jp/~b-berry/	http://wan.chu.jp/1sita.html	http://wan.chu.jp/	CHRONOLOG					

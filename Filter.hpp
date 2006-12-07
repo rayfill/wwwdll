@@ -127,16 +127,19 @@ namespace Filter
 		}
 
 		std::pair<size_t, size_t>
-		match(const std::string& targetStr) const
+		match(const std::string& targetStr, const size_t offset = 0) const
 		{
 			assert(tokens.size() > 0);
 
-			size_t first = 0;
+			if (!(offset < targetStr.length()))
+				return std::make_pair<size_t, size_t>(0, 0);
+
+			size_t first = offset;
 			const std::string target =
 				ignoreCase ? lowerCase(targetStr) : targetStr;
 
 			if (tokens.front() != "*")
-				first = target.find(tokens.front(), 0);
+				first = target.find(tokens.front(), offset);
 
 			size_t last = subMatch(0, first, target);
 			if (last == std::string::npos)
@@ -160,6 +163,13 @@ namespace Filter
 		Matcher headMatcher;
 		Matcher tailMatcher;
 
+		static bool isValidRange(const range_t& head, const range_t& last)
+		{
+			return ((head.first <= head.second) &&
+					(last.first <= last.second) &&
+					(head.second <= last.first));
+		}
+		
 	public:
 		MatchUtil(const char* head_, const char* tail_, const bool ignoreCase):
 			headMatcher(head_, ignoreCase), tailMatcher(tail_, ignoreCase)
@@ -173,11 +183,13 @@ namespace Filter
 			range_t head = headMatcher.match(target);
 			if (head.second == 0)
 				return target;
-
 			
-			range_t tail = tailMatcher.match(target.substr(head.second));
+			range_t tail = tailMatcher.match(target.substr(head.second),
+											 head.second);
 			if (tail.second == 0)
 				return target;
+
+			assert(isValidRange(head, tail));
 
 			return target.substr(head.first,
 								 (head.second + tail.second) - head.first);
@@ -202,11 +214,12 @@ namespace Filter
 			range_t head = headMatcher.match(target);
 			if (head.second == 0)
 				return target;
-
 			
-			range_t tail = tailMatcher.match(target);
+			range_t tail = tailMatcher.match(target, head.second);
 			if (tail.second == 0)
 				return target;
+
+			assert(isValidRange(head, tail));
 
 			return target.substr(0, head.first) + 
 				target.substr(tail.second);
@@ -224,6 +237,12 @@ namespace Filter
 			} while (length > result.length());
 
 			return result;
+		}
+
+		std::string toString() const
+		{
+			return std::string("head: ") + headMatcher.toString() + "\n" +
+				"tail: " + tailMatcher.toString() + "\n";
 		}
 	};
 
@@ -280,6 +299,30 @@ namespace Filter
 			default:
 				return "";
 			}
+		}
+
+		std::string toString() const
+		{
+			std::string op;
+			switch (oper)
+			{
+				case extract:
+					op = "extract";
+					break;
+
+				case remove:
+					op = "remove";
+					break;
+			
+				case removeAll:
+					op = "remove all";
+					break;
+
+				default:
+					op = "unknown";
+			}
+
+			return std::string("operation: ") + op + "\n" + util.toString();
 		}
 	};
 

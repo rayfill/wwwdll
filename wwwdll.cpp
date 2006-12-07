@@ -8,8 +8,6 @@
 #include <fstream>
 #include "wwwdll.h"
 
-#include <iostream>
-
 typedef RerunnableThread thread_t;
 
 
@@ -19,31 +17,16 @@ struct AfterNotify
 	HWND hWnd;
 	unsigned int message;
 
-#ifndef NDEBUG
-	CriticalSection local;
-	long callCount;
-#endif
-
-
 	AfterNotify():
 		hWnd(), message()
-#ifndef NDEBUG
-			, local(), callCount(0)
-#endif
 	{}
 
 	AfterNotify(HWND hWnd_, unsigned int message_):
 		hWnd(hWnd_), message(message_)
-#ifndef NDEBUG
-			, local(), callCount(0)
-#endif
 	{}
 
 	AfterNotify(const AfterNotify& src):
 		hWnd(src.hWnd), message(src.message)
-#ifndef NDEBUG
-			, local(), callCount(0)
-#endif
 	{}
 
 	AfterNotify& operator=(const AfterNotify& src)
@@ -62,15 +45,6 @@ struct AfterNotify
 		if (message == 0)
 			return;
 
-#ifndef NDEBUG
-		{
-			ScopedLock<CriticalSection> lock(local);
-			OutputDebugString(std::string("threadID: " +
-							stringCast<Thread::thread_id_t>(Thread::self()) +
-							" post for count of " +
-							stringCast<int>(++callCount)).c_str());
-		}
-#endif
 		PostMessage(hWnd, message,
 					static_cast<WPARAM>(result),
 					reinterpret_cast<LPARAM>(threadContext));
@@ -148,7 +122,6 @@ private:
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
 			return false;
 		}
 		catch (...)
@@ -246,7 +219,6 @@ public:
 		catch(...)
 		{
 			functor(result, this->getThreadContext());
-			std::cerr << "unknown exception raised." << std::endl;
 		}
 
 		return result;
@@ -320,6 +292,14 @@ void* CALLDECL HTTPCreateContext(const char* url,
 									 timeout,
 									 AfterNotify());
 
+	void** test = reinterpret_cast<void**>(target);
+	if (*test == NULL)
+	{
+		MessageBox(NULL, "debug", "created context is invalid.", MB_OK);
+		Thread::sleep(INFINITE);
+	}
+
+	target->prepare();
 	return target;
 }
 
@@ -339,6 +319,7 @@ void* CALLDECL HTTPGetContentsSync(const char* url,
 									 timeout,
 									 AfterNotify());
 
+	target->prepare();
 	*result = target->run();
 	return target;
 }
@@ -406,9 +387,13 @@ long CALLDECL HTTPGetFilteredCRC32(void* httpContext,
 		FilterGetFilters(managerContext, target->getURL().c_str());
 
 	std::string resource = target->getContentsString();
-	char* str = new char[resource.length()];
+	char* str = new char[resource.length()+1];
+	std::copy(resource.begin(), resource.end(), str);
+	str[resource.length()] = 0;
 
-	str[FilterApply(filter, str)] = 0;
+	const long result = FilterApply(filter, str);
+	assert(result >= 0 && resource.length() >= static_cast<size_t>(result));
+	str[result] = 0;
 
 	long crc32 = HTTPGetCRC32FromString(str);
 	delete[] str;
@@ -621,9 +606,9 @@ long CALLDECL FilterApply(void* filterHandle, char* contents)
 		 itor != executors->end(); ++itor)
 		target = (*itor)->execute(target);
 
-// 	std::string::const_iterator itor = target.begin();
-// 	while (itor != target.end())
-// 		*contents++ = *itor++;
+	std::string::const_iterator itor = target.begin();
+	while (itor != target.end())
+		*contents++ = *itor++;
 
 	/**
 	 * どーもiteratorで回すとへんなコード生成するみたい・・・
@@ -631,8 +616,8 @@ long CALLDECL FilterApply(void* filterHandle, char* contents)
 	 * んー、_S_createがこけたのに例外握りつぶしてたどり
 	 * 着いてるのかなぁ･･･
 	 */
-	for (size_t offset = 0; offset < target.length(); ++offset)
-		contents[offset] = target[offset];
+// 	for (size_t offset = 0; offset < target.length(); ++offset)
+// 		contents[offset] = target[offset];
 
 	return static_cast<long>(target.length());
 }

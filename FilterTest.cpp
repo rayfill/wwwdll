@@ -43,12 +43,12 @@ int main()
 {
  	FilterMatcherTest().main();
 	
-	Filter::MatchUtil util("<body", "</body>", true);
-	std::ifstream ifs("teiten.html");
+// 	Filter::MatchUtil util("<body", "</body>", true);
+	std::ifstream ifs("savedfile.html");
 	std::istreambuf_iterator<char> itor(ifs), end;
 	std::string file(itor, end);
 
-	std::cout << util.remove(file) << std::endl;
+// 	std::cout << util.remove(file) << std::endl;
 
 	//	std::cout << "-----------" << std::endl;
 	//	std::cout << util.extract(file) << std::endl;
@@ -69,9 +69,21 @@ int main()
 	manager.addRules(rules);
 
 	std::vector<Executor*> executors =
-		manager.getExecutors("http://www.geocities.jp/hazimes316/top.htm");
+		manager.getExecutors("http://www.geocities.jp/hou_para/top/mainpage.html");
 
 	std::cout << "matched executors: " << executors.size() << std::endl;
+
+	for (std::vector<Executor*>::iterator itor = executors.begin();
+		 itor != executors.end(); ++itor)
+	{
+		std::cout << "file length of " << file.length() << std::endl;
+		std::cout << (*itor)->toString() << std::endl;
+		file = (*itor)->execute(file);
+	}
+
+	std::ofstream procfile("procfile.html", std::ios::binary);
+	procfile << file;
+	procfile.close();
 
 	return 0;
 }

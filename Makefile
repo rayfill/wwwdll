@@ -7,7 +7,7 @@ CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0500 -D_REENTRANT -mthreads
 .PHONY: strip clean depends
 
 test: wwwdll.dll wwwdlltest
-	./wwwdlltest.exe 300 http://www.geocities.jp/hazimes316/top.htm
+	./wwwdlltest.exe 300 http://www.geocities.jp/hou_para/top/mainpage.html
 
 filterTest: FilterTest.cpp Filter.hpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -o filterTest FilterTest.cpp $(LIBS)

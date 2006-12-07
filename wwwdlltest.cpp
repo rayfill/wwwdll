@@ -40,6 +40,9 @@ int main(int argc, char** argv)
 		std::cout << "HTTP status:" <<
 			HTTPGetResponseCode(httpContext) << std::endl;
 
+		// save file.
+		HTTPContentsSave(httpContext, "savedfile.html");
+
 		// last modified
 		long length = HTTPGetLastModified(httpContext, NULL, 0);
 		char* buffer = new char[length+1];
@@ -51,13 +54,11 @@ int main(int argc, char** argv)
 		std::cout << "length: " << HTTPGetContentsLength(httpContext) << std::endl;
 		// crc
 		std::cout << "crc: " << HTTPGetCRC32(httpContext) << std::endl;
+
 		void* filterManager = FilterManagerCreate();
 		std::cout << "filtered crc: " << 
 			HTTPGetFilteredCRC32(httpContext, filterManager) << std::endl;
 		FilterManagerTerminate(filterManager);
-
-		// save file.
-		HTTPContentsSave(httpContext, "savedfile.html");
 
 		// regex
 		int matchedLength = HTTPGetContentsLength(httpContext);
@@ -315,8 +316,8 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 				{
 					ScopedLock<CriticalSection> lock(debugSec);
 					++postCount;
-					OutputDebugString((std::string("posted count of ") +
-							stringCast<int>(postCount)).c_str());
+//					OutputDebugString((std::string("posted count of ") +
+//							stringCast<int>(postCount)).c_str());
 				}
 
 				void* threadContext = reinterpret_cast<void*>(lParam);
@@ -387,7 +388,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 	}
 	catch (std::exception& e)
 	{
-		std::cout << std::endl << "exception: " << e.what() << std::endl;
+//		std::cout << std::endl << "exception: " << e.what() << std::endl;
 	}
 
 	return 0;
@@ -398,13 +399,13 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 
 void my_terminate()
 {
-	std::cout << "terminate program" << std::endl;
+//	std::cout << "terminate program" << std::endl;
 	abort();
 }
 
 void my_unexpected()
 {
-	std::cout << "unexpected exception" << std::endl;
+//	std::cout << "unexpected exception" << std::endl;
 	std::terminate();
 }
 
