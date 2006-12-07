@@ -292,14 +292,6 @@ void* CALLDECL HTTPCreateContext(const char* url,
 									 timeout,
 									 AfterNotify());
 
-	void** test = reinterpret_cast<void**>(target);
-	if (*test == NULL)
-	{
-		MessageBox(NULL, "debug", "created context is invalid.", MB_OK);
-		Thread::sleep(INFINITE);
-	}
-
-	target->prepare();
 	return target;
 }
 
