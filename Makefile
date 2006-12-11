@@ -3,7 +3,7 @@ CXX=/cygdrive/c/MinGW/bin/g++
 DLLWRAP=/cygdrive/c/MinGW/bin/dllwrap
 DLLTOOL=/cygdrive/c/MinGW/bin/dlltool
 DEPENDS_DIR=../cpp_lib
-CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0500 -D_REENTRANT -mthreads
+CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
 .PHONY: strip clean depends
 
 test: wwwdll.dll wwwdlltest
