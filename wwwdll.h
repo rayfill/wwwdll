@@ -152,6 +152,16 @@ extern "C"
 	long CALLDECL HTTPContentsSave(void* HttpContext, const char* filename);
 
 	/**
+	 * 取得したWebコンテンツをフィルタした後、指定ファイルへ保存する。
+	 * @param HttpContext HTTPGetContents()の戻り値
+	 * @param managerContext フィルタマネージャハンドル
+	 * @param filename 保存するファイル名
+	 * @return 成功時1、失敗時0がかえる
+	 */
+	long CALLDECL HTTPFilteredContentsSave(void* httpContext,
+										   void* managerContext,
+										   const char* filename);
+	/**
 	 * 取得したWebコンテンツの長さを取得する
 	 * @param HttpContext HTTPGetContents()の戻り値
 	 * @return Webコンテンツの長さ

@@ -13,6 +13,7 @@ EXPORTS
 	HTTPGetCRC32FromString
 	HTTPGetFilteredCRC32
 	HTTPContentsSave
+	HTTPFilteredContentsSave
 	HTTPGetContentsLength
 	HTTPGetResource
 	HTTPClose

@@ -13,6 +13,7 @@ HTTPGetCRC32@4
 HTTPGetCRC32FromString@4
 HTTPGetFilteredCRC32@8
 HTTPContentsSave@8
+HTTPFilteredContentsSave@12
 HTTPGetContentsLength@4
 HTTPGetResource@12
 HTTPClose@4
