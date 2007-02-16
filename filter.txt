@@ -117,3 +117,5 @@ DIC	http://*.yokinihakarae.*	<!-- google_ad_section_start(weight=ignore) -->	<!-
 DIC	http://*.yaekumo.*	<!-- google_ad_section_start(weight=ignore) -->	<!-- google_ad_section_end -->
 DIC	http://*.yamanoha.*	<!-- google_ad_section_start(weight=ignore) -->	<!-- google_ad_section_end -->
 DIC	http://*.yakigote.*	<!-- google_ad_section_start(weight=ignore) -->	<!-- google_ad_section_end -->
+
+DIC	http://*			<remove test>								</remove test>

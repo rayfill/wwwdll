@@ -59,7 +59,7 @@ namespace Filter
 
 		/**
 		 * 
-		 * @return ƒ}ƒbƒ`ŒÂŠI’[Bstd::string::npos‚¾‚Æ–¢ƒ}ƒbƒ`
+		 * @return ãƒãƒƒãƒå€‹æ‰€çµ‚ç«¯ã€‚std::string::nposã ã¨æœªãƒãƒƒãƒ
 		 */
 		size_t subMatch(const int patternNumber,
 						size_t current,
@@ -424,22 +424,37 @@ namespace Filter
 				if (rule_term == std::string::npos)
 					continue;
 
+				const std::string::size_type url_head =
+					line.find_first_not_of("	", rule_term);
+				if (url_head == std::string::npos)
+					continue;
+
 				const std::string::size_type url_term =
-					line.find_first_of("	", rule_term + 1);
+					line.find_first_of("	", url_head);
 				if (url_term == std::string::npos)
 					continue;
 
+				const std::string::size_type head_head = 
+					line.find_first_not_of("	", url_term);
+				if (head_head == std::string::npos)
+					continue;
+
 				const std::string::size_type head_term =
-					line.find_first_of("	", url_term + 1);
+					line.find_first_of("	", head_head);
 				if (head_term == std::string::npos)
 					continue;
 
-				rules.push_back(Rule(line.substr(0, rule_term),
-									 line.substr(rule_term + 1,
-												 url_term - rule_term - 1),
-									 line.substr(url_term + 1,
-												 head_term - url_term - 1),
-									 line.substr(head_term + 1)));
+				const std::string::size_type tail_head =
+					line.find_first_not_of("	", head_term);
+
+				if (tail_head == std::string::npos)
+					continue;
+
+				rules.push_back(
+					Rule(line.substr(0, rule_term),
+						 line.substr(url_head, url_term - url_head),
+						 line.substr(head_head, head_term - head_head),
+						 line.substr(tail_head)));
 			}
 		}
 	};
