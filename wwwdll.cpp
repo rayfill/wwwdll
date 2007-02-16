@@ -8,6 +8,7 @@
 #include <fstream>
 #include "wwwdll.h"
 
+
 typedef RerunnableThread thread_t;
 
 
@@ -416,6 +417,36 @@ long CALLDECL HTTPContentsSave(void* httpContext, const char* filename)
 
 	ofs << target->getContentsString();
 	ofs.close();
+	return 1;
+}
+
+long CALLDECL HTTPFilteredContentsSave(void* httpContext,
+									   void* managerContext,
+									   const char* filename)
+{
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
+
+	std::ofstream ofs(filename,
+					  std::ios::binary | std::ios::out | std::ios::trunc);
+	if (ofs.fail())
+		return 0;
+
+	std::string resource = target->getContentsString();
+	char* str = new char[resource.length()+1];
+	std::copy(resource.begin(), resource.end(), str);
+	str[resource.length()] = 0;
+
+	void* filter =
+		FilterGetFilters(managerContext, target->getURL().c_str());
+	const long result = FilterApply(filter, str);
+	assert(result >= 0 && resource.length() >= static_cast<size_t>(result));
+	
+	str[result] = 0;
+
+	ofs << str;
+	ofs.close();
+	FilterRemoveFilters(filter);
 	return 1;
 }
 

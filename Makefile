@@ -13,7 +13,7 @@ filterTest: FilterTest.cpp Filter.hpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -o filterTest FilterTest.cpp $(LIBS)
 
 debug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
-	$(CXX) -DDEBUGMAIN $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS) -o debugmain wwwdll.cpp -lws2_32 $(LIB_PATH)  $(LIBS)
+	$(CXX) -DDEBUGMAIN $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -o debugmain wwwdll.cpp -lws2_32 $(LIB_PATH)  $(LIBS)
 
 windebug: wwwdll.h wwwdll.cpp wwwdlltest.cpp
 	$(CXX) -DDEBUGWINMAIN $(CXXFLAGS) -mwindows $(INCLUDES) -I$(DEPENDS_DIR) -o debugwinmain wwwdll.cpp -lws2_32 $(LIB_PATH)  $(LIBS)

@@ -58,6 +58,10 @@ int main(int argc, char** argv)
 		void* filterManager = FilterManagerCreate();
 		std::cout << "filtered crc: " << 
 			HTTPGetFilteredCRC32(httpContext, filterManager) << std::endl;
+
+		HTTPFilteredContentsSave(httpContext, filterManager,
+								 "filteredfile.html");
+
 		FilterManagerTerminate(filterManager);
 
 		// regex
