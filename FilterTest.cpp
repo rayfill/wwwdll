@@ -69,8 +69,8 @@ int main()
 	manager.addRules(rules);
 
 	std::vector<Executor*> executors =
+//		manager.getExecutors("http://nishimuku.buzama.com/");
 		manager.getExecutors("http://www.geocities.jp/hou_para/top/mainpage.html");
-
 	std::cout << "matched executors: " << executors.size() << std::endl;
 
 	for (std::vector<Executor*>::iterator itor = executors.begin();

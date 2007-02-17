@@ -6,6 +6,13 @@
 
 namespace Filter
 {
+	enum EnableMatcher
+	{
+		both,
+		head,
+		tail
+	};
+
 	class Matcher
 	{
 		friend class FilterMatcherTest;
@@ -150,7 +157,7 @@ namespace Filter
 
 		std::string toString() const
 		{
-			return pattern + ", ignore: " + (ignoreCase ? "true" : "false");
+			return pattern + ", ignoreCase: " + (ignoreCase ? "true" : "false");
 		}
 	};
 
@@ -162,6 +169,7 @@ namespace Filter
 	private:
 		Matcher headMatcher;
 		Matcher tailMatcher;
+		EnableMatcher enables;
 
 		static bool isValidRange(const range_t& head, const range_t& last)
 		{
@@ -171,28 +179,52 @@ namespace Filter
 		}
 		
 	public:
-		MatchUtil(const char* head_, const char* tail_, const bool ignoreCase):
-			headMatcher(head_, ignoreCase), tailMatcher(tail_, ignoreCase)
+		MatchUtil(const char* head_, const char* tail_,
+				  const bool ignoreCase, EnableMatcher enables_ = both):
+			headMatcher(head_, ignoreCase), tailMatcher(tail_, ignoreCase),
+			enables(enables_)
 		{}
 
 		~MatchUtil()
 		{}
 
+
+		range_t makeMatchRange(const Matcher& head_, const Matcher& tail_,
+							   const std::string& target,
+							   EnableMatcher enabler) const
+		{
+			range_t headRange;
+			range_t tailRange;
+			if (enabler != tail)
+			{
+				headRange = headMatcher.match(target);
+				if (headRange.second == 0)
+					return range_t(0, 0);
+			}
+			else
+				headRange = range_t(0, 0);
+
+			if (enabler != head)
+			{
+				tailRange = tailMatcher.match(target, headRange.second);
+				if (tailRange.second == 0)
+					return range_t(0, 0);
+			}
+			else
+				tailRange = range_t(target.length(), target.length());
+
+			assert(isValidRange(headRange, tailRange));
+			
+			return range_t(headRange.first, tailRange.second);
+		}
+
 		std::string extract(const std::string& target) const
 		{
-			range_t head = headMatcher.match(target);
-			if (head.second == 0)
+			range_t range = makeMatchRange(headMatcher, tailMatcher,
+										   target, enables);
+			if (range.first == 0 && range.first == range.second)
 				return target;
-			
-			range_t tail = tailMatcher.match(target.substr(head.second),
-											 head.second);
-			if (tail.second == 0)
-				return target;
-
-			assert(isValidRange(head, tail));
-
-			return target.substr(head.first,
-								 (head.second + tail.second) - head.first);
+			return target.substr(range.first, range.second - range.first);
 		}
 
 		std::string extractAll(const std::string& target) const
@@ -211,18 +243,11 @@ namespace Filter
 
 		std::string remove(const std::string& target) const
 		{
-			range_t head = headMatcher.match(target);
-			if (head.second == 0)
+			range_t range = makeMatchRange(headMatcher, tailMatcher,
+										   target, enables);
+			if (range.first == 0 && range.first == range.second)
 				return target;
-			
-			range_t tail = tailMatcher.match(target, head.second);
-			if (tail.second == 0)
-				return target;
-
-			assert(isValidRange(head, tail));
-
-			return target.substr(0, head.first) + 
-				target.substr(tail.second);
+			return target.substr(0, range.first) + target.substr(range.second);
 		}
 
 		std::string removeAll(const std::string& target) const
@@ -262,8 +287,9 @@ namespace Filter
 
 	public:
 		Executor(operation op,
-				 const char* head, const char* last, const bool ignoreCase):
-			oper(op), util(head, last, ignoreCase)
+				 const char* head, const char* last,
+				 const bool ignoreCase, EnableMatcher enables = both):
+			oper(op), util(head, last, ignoreCase, enables)
 		{}
 
 		std::string getOperationMode() const
@@ -485,10 +511,18 @@ namespace Filter
 			else
 				oper = Executor::undefined;
 
+			EnableMatcher enabler;
+			if (rule.head == "^")
+				enabler = tail;
+			else if (rule.tail == "$")
+				enabler = head;
+			else
+				enabler = both;
+
 			Executor* executor = new Executor(oper, 
 											  rule.head.c_str(),
 											  rule.tail.c_str(),
-											  ignoreCase);
+											  ignoreCase, enabler);
 
 			return std::make_pair(Matcher(rule.matchURL, false), executor);
 		}
