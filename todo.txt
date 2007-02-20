@@ -105,3 +105,16 @@ GrandM> http://kotopan.is-a-geek.com:8080/ wwwdll で読み込んだらおちるかも
 21:04:54 <rayfill> うぃ
 21:05:00 <GrandM> wwwdlltest で止まる↑
 21:05:04 <rayfill> りょーかい
+
+buttobiで引っかかるらしい
+00:14:26 <GrandM> buttobi はサイト数少ないから、全部だしてみる
+00:14:37 <rayfill_> よろー
+00:14:40 <GrandM> http://kasaneduki.jog.buttobi.net/
+00:14:44 <GrandM> http://nandaka.jog.buttobi.net/
+00:14:53 <GrandM> http://sleepysheep.nce.buttobi.net/
+00:14:56 <GrandM> http://k5kmr51.jog.buttobi.net/
+00:15:00 <GrandM> http://nitrowalk.jog.buttobi.net/
+00:15:05 <GrandM> http://namama7.jog.buttobi.net/
+00:15:08 <GrandM> http://orepeko.jog.buttobi.net/
+00:15:12 <GrandM> http://kicktheground.web.fc2.com/
+00:15:17 <GrandM> おわり
