@@ -664,7 +664,3 @@ void CALLDECL WWWTerminate(void* contextHandle)
 
 	delete handle;
 }
-
-#if defined(DEBUGMAIN) || defined(DEBUGWINMAIN)
-#	include "wwwdlltest.cpp"
-#endif
