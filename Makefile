@@ -1,7 +1,7 @@
 CXX=g++
 #CXX=g++
-DLLWRAP=/c/MinGW/bin/dllwrap
-DLLTOOL=/c/MinGW/bin/dlltool
+DLLWRAP=dllwrap
+DLLTOOL=dlltool
 DEPENDS_DIR=../cpp_lib
 CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
 .PHONY: strip clean depends

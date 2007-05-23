@@ -32,8 +32,8 @@ int main(int argc, char** argv)
 										 "Firefox/1.5.0.7",
 										 timeout,
 										 &result,
-										 "proxy.nttdata.co.jp",
-										 8080,
+										 "rayfill.dyndns.org",
+										 8086,
 										 NULL,
 										 NULL);
 
