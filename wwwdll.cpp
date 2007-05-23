@@ -95,6 +95,10 @@ private:
 	std::string url;
 	std::string cookie;
 	std::string userAgent;
+	std::string proxyName;
+	unsigned short proxyPort;
+	std::string proxyUser;
+	std::string proxyPass;
 	const long timeout;
 	HTTPResult<> result;
 	thread_t* threadContext;
@@ -117,6 +121,11 @@ private:
 			if (cookie != "")
 				client.addCookie(cookie.c_str());
 			client.setTimeout(timeout);
+			if (proxyName != "")
+				client.setProxy(proxyName, proxyPort);
+			if (proxyUser != "")
+				client.setProxyAuthorization(proxyUser.c_str(),
+											 proxyPass.c_str());
 
 			result = client.getResource(url.c_str());
 
@@ -178,11 +187,50 @@ public:
 		url(url_),
 		cookie(cookie_ == NULL ? "" : cookie_),
 		userAgent(userAgent_ == NULL ? "" : userAgent_),
+		proxyName(),
+		proxyPort(),
+		proxyUser(),
+		proxyPass(),
 		timeout(timeout_),
 		result(),
 		threadContext(),
 		functor(functor_)
 	{}
+
+	void setProxy(const char* server, unsigned short port)
+	{
+		proxyName = server;
+		proxyPort = port;
+	}
+
+	std::pair<std::string, unsigned short> getProxy()
+	{
+		return std::make_pair(proxyName, proxyPort);
+	}
+
+	void resetProxy()
+	{
+		proxyName = "";
+		proxyPort = 0;
+		proxyUser = "";
+		proxyPass = "";
+	}
+	
+	void setProxyUsername(const char* user)
+	{
+		proxyUser = user;
+	}
+
+	void setProxyPassword(const char* pass)
+	{
+		proxyPass = pass;
+	}
+
+	void resetProxyAuthorize()
+	{
+		proxyUser = "";
+		proxyPass = "";
+	}
 
 	virtual ~HTTPContext() throw ()
 	{}
@@ -293,6 +341,35 @@ void* CALLDECL HTTPCreateContext(const char* url,
 									 timeout,
 									 AfterNotify());
 
+	return target;
+}
+
+void* CALLDECL HTTPGetContentsSyncWithProxy(const char* url,
+											const char* cookie,
+											const char* userAgent,
+											const long timeout,
+											int* result,
+											const char* proxyserver,
+											unsigned int proxyport,
+											const char* proxyuser,
+											const char* proxypass)
+{
+	assert(url != NULL);
+	assert(result != NULL);
+
+	Runnable* target =
+		new HTTPContext<AfterNotify>(url,
+									 cookie,
+									 userAgent,
+									 timeout,
+									 AfterNotify());
+
+	HTTPUseProxy(target, proxyserver, proxyport);
+	if (proxyuser != NULL)
+		HTTPProxyAuth(target, proxyuser, proxypass);
+
+	target->prepare();
+	*result = target->run();
 	return target;
 }
 
@@ -486,6 +563,35 @@ void CALLDECL HTTPClose(void* httpContext)
 
 	delete target;
 }
+
+void CALLDECL HTTPUseProxy(void* httpContext, const char* proxyName, int port)
+{
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
+
+	if (proxyName == NULL)
+		target->resetProxy();
+	else
+		target->setProxy(proxyName, port);
+}
+
+int CALLDECL HTTPProxyAuth(void* httpContext,
+						   const char* username, const char* password)
+{
+	HTTPContext<AfterNotify>* target =
+		reinterpret_cast<HTTPContext<AfterNotify>*>(httpContext);
+
+	if (username == NULL ||
+		password == NULL ||
+		target->getProxy().first == "")
+		return 0; // don't set proxy server, or argument failed.
+
+	target->setProxyUsername(username);
+	target->setProxyPassword(password);
+
+	return 1;
+}
+		
 
 void* CALLDECL RegexCompile(const char* pattern)
 {

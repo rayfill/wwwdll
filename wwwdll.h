@@ -86,6 +86,17 @@ extern "C"
 										const long timeout,
 										int* result);
 
+	void* CALLDECL HTTPGetContentsSyncWithProxy
+	(const char* url,
+	 const char* cookie,
+	 const char* userAgent,
+	 const long timeout,
+	 int* result,
+	 const char* proxyserver,
+	 unsigned int proxyport,
+	 const char* proxyuser,
+	 const char* proxypass);
+
 	/**
 	 * 取得したWebコンテンツのURLの取得
 	 * @param HttpContext HTTPGetContents()の戻り値
@@ -184,6 +195,11 @@ extern "C"
 	 * @param HttpContext HTTPGetContents()の戻り値
 	 */
 	void CALLDECL HTTPClose(void* HttpContext);
+
+	void CALLDECL HTTPUseProxy(void* httpContext,
+							   const char* proxyName, int port);
+	int CALLDECL HTTPProxyAuth(void* httpContext,
+							   const char* username, const char* password);
 
 	/**
 	 * 正規表現オブジェクトを作成する

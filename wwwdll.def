@@ -6,6 +6,7 @@ ThreadJoin@4
 ThreadClose@4
 HTTPCreateContext@16
 HTTPGetContentsSync@20
+HTTPGetContentsSyncWithProxy@36
 HTTPGetURL@12
 HTTPGetLastModified@12
 HTTPGetResponseCode@4
@@ -17,6 +18,8 @@ HTTPFilteredContentsSave@12
 HTTPGetContentsLength@4
 HTTPGetResource@12
 HTTPClose@4
+HTTPUseProxy@12
+HTTPProxyAuth@12
 RegexCompile@4
 RegexMatcher@20
 RegexMatchFromString@20

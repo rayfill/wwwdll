@@ -23,19 +23,26 @@ int main(int argc, char** argv)
 
 		void* httpContext;
 		int result = 0;
-		httpContext = HTTPGetContentsSync(url.c_str(),
-										  NULL,
-										  "Mozilla/5.0 "
-										  "(Windows; U; Windows NT 5.1; ja; "
-										  "rv:1.8.0.7) Gecko/20060909 "
-										  "Firefox/1.5.0.7",
-										  timeout,
-										  &result);
+		httpContext =
+			HTTPGetContentsSyncWithProxy(url.c_str(),
+										 NULL,
+										 "Mozilla/5.0 "
+										 "(Windows; U; Windows NT 5.1; ja; "
+										 "rv:1.8.0.7) Gecko/20060909 "
+										 "Firefox/1.5.0.7",
+										 timeout,
+										 &result,
+										 "proxy.nttdata.co.jp",
+										 8080,
+										 NULL,
+										 NULL);
+
 		if (result == 0)
 		{
 			std::cout << "content get failed." << std::endl;
 			return 0;
 		}
+
 
 		std::cout << "HTTP status:" <<
 			HTTPGetResponseCode(httpContext) << std::endl;

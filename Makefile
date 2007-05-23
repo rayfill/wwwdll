@@ -1,13 +1,13 @@
-CXX=/cygdrive/c/MinGW/bin/g++
+CXX=g++
 #CXX=g++
-DLLWRAP=/cygdrive/c/MinGW/bin/dllwrap
-DLLTOOL=/cygdrive/c/MinGW/bin/dlltool
+DLLWRAP=/c/MinGW/bin/dllwrap
+DLLTOOL=/c/MinGW/bin/dlltool
 DEPENDS_DIR=../cpp_lib
 CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
 .PHONY: strip clean depends
 
 test: wwwdll.dll wwwdlltest
-	./wwwdlltest.exe 300 http://nishimuku.buzama.com/
+	./wwwdlltest.exe 300 http://www.goo.ne.jp/
 
 filterTest: FilterTest.cpp Filter.hpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -o filterTest FilterTest.cpp $(LIBS)
@@ -23,7 +23,7 @@ wwwdll.o: wwwdll.cpp
 	$(CXX) -DNDEBUG -Wall $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -c wwwdll.cpp
 
 wwwdll.dll: wwwdll.o wwwdll.def
-	$(DLLWRAP) -k --def wwwdll.def --driver-name `cygpath -w $(CXX)`  -mthreads -o wwwdll.dll wwwdll.o -lws2_32 $(LIB_PATH)  $(LIBS)
+	$(DLLWRAP) -k --def wwwdll.def --driver-name $(CXX)  -mthreads -o wwwdll.dll wwwdll.o -lws2_32 $(LIB_PATH)  $(LIBS)
 
 libwwwdll.a: wwwdll.dll wwwdll.def
 	$(DLLTOOL) -k --def wwwdll.def --dllname wwwdll.dll --output-lib libwwwdll.a
