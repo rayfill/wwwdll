@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <text/LexicalCast.hpp>
+#include <cstdlib>
 #include "wwwdll.h"
 
 int main(int argc, char** argv)
@@ -17,13 +18,63 @@ int main(int argc, char** argv)
 
 	try
 	{
+		char* proxy = std::getenv("http_proxy");
+		if (proxy == NULL)
+			proxy = std::getenv("HTTP_PROXY");
+
+		std::string proxy_name;
+		std::string proxy_port;
+		std::string proxy_user;
+		std::string proxy_pass;
+		if (proxy != NULL)
+		{
+			const std::string env_proxy = std::string(proxy);
+			proxy_name =
+				env_proxy.find("@") != std::string::npos ?
+				env_proxy.substr(env_proxy.find("@") + 1) :
+				env_proxy;
+
+			if (proxy_name.find(":") != std::string::npos)
+			{
+				proxy_port = proxy_name.substr(proxy_name.find(":") + 1);
+				proxy_name = proxy_name.substr(0, proxy_name.find(":"));
+			}
+			else
+			{
+				proxy_port = "";
+			}
+
+			const std::string user_and_pass =
+				(env_proxy.find("@") == std::string::npos) ? "" :
+				env_proxy.substr(0, env_proxy.find("@"));
+
+			proxy_user =
+				user_and_pass == "" ? "" :
+				user_and_pass.substr(0, user_and_pass.find(":"));
+
+			proxy_pass = 
+				((proxy_user != "") &&
+				 (user_and_pass.find(":") != std::string::npos)) ?
+				user_and_pass.substr(user_and_pass.find(":") + 1) :
+				"";
+		}
+
 		void* handle = WWWInit();
 		const long timeout = lexicalCast<long>(argv[1]);
 		std::string url = argv[2];
 
 		void* httpContext;
 		int result = 0;
-		httpContext =
+
+		httpContext = proxy_name == "" ?
+			HTTPGetContentsSync(url.c_str(),
+								NULL,
+								"Mozilla/5.0 "
+								"(Windows; U; Windows NT 5.1; ja; "
+								"rv:1.8.0.7) Gecko/20060909 "
+								"Firefox/1.5.0.7",
+								timeout,
+								&result) :
 			HTTPGetContentsSyncWithProxy(url.c_str(),
 										 NULL,
 										 "Mozilla/5.0 "
@@ -32,10 +83,13 @@ int main(int argc, char** argv)
 										 "Firefox/1.5.0.7",
 										 timeout,
 										 &result,
-										 "rayfill.dyndns.org",
-										 8086,
-										 NULL,
-										 NULL);
+										 proxy_name.c_str(),
+										 proxy_port == "" ?
+										 80 : lexicalCast<int>(proxy_port),
+										 proxy_user == "" ?
+										 NULL : proxy_user.c_str(),
+										 proxy_pass == "" ?
+										 NULL : proxy_pass.c_str());
 
 		if (result == 0)
 		{
