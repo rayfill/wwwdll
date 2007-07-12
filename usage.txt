@@ -1,49 +1,49 @@
 
-�EWWWinit()
-�@�������B
+・WWWinit()
+　初期化。
 
-�EHTTPGetContents()/HTTPGetContentsSync()
-  �R���e���c�̎擾�����B-Sync()���Ɠ����Ŏ��s�B
-  �ȑO�ƈ����HTTPGetContents()�̕����񓯊��ɂȂ��Ă�̂Œ��ӁB
-  �����Ƃ��߂�l��HTTP*�֐��̑������ɗ^���邽�߂̃R���e�L�X�g�ɂȂ��Ă܂��B
-  �񓯊��ł̓E�B���h�E���b�Z�[�W��lParam�ł��R���e�L�X�g���擾�ł��܂��B
-  �񓯊��ł�wParam�A�����ł�result��0��1�����������ė��܂���B
-  0�����s�A1�������ł��B
+・HTTPGetContents()/HTTPGetContentsSync()
+  コンテンツの取得処理。-Sync()だと同期で実行。
+  以前と違ってHTTPGetContents()の方が非同期になってるので注意。
+  両方とも戻り値がHTTP*関数の第一引数に与えるためのコンテキストになってます。
+  非同期版はウィンドウメッセージのlParamでもコンテキストを取得できます。
+  非同期版のwParam、同期版のresultは0か1しかかえって来ません。
+  0が失敗、1が成功です。
 
-�EHTTPGetResponseCode()/HTTPGetCRC32()/HTTPGetContentsLength()/HTTPGetFilteredCRC32()
-�@���ꂼ�ꐮ���^���Ńf�[�^������̂Ŏ��s���܂���B
-�@�߂�l�����̂܂܎g���Ă��������B
+・HTTPGetResponseCode()/HTTPGetCRC32()/HTTPGetContentsLength()/HTTPGetFilteredCRC32()
+　それぞれ整数型幅でデータが入るので失敗しません。
+　戻り値をそのまま使ってください。
 
-�EHTTPContentsSave()
-�@�t�@�C���ۑ��p�B�t�@�C�����Ƃ������Ă݂Ċm�F���Ă�̂ŁA/dev/con/con
-�@�Ƃ����o���Ȃ͔̂����Ă��������B
+・HTTPContentsSave()
+　ファイル保存用。ファイル名とかあけてみて確認してるので、/dev/con/con
+　とかヤバげなのは避けてください。
 
-�EHTTPGetlastModified()
-�@�����񒷂��R���e���c�Ƃ��Ă݂Ȃ��Ɗm��ł��Ȃ��̂�
-�@��x�ڂ͑�2������NULL���w�肵�ČĂяo�����ƂŕK�v�ȕ����񒷂��߂�܂��B
-�@����̕��ȏ�̃��������m�ی�A��2�����ɂ��̃������̃|�C���^���w�肵��
-�@�Ăяo�����Ƃœ��t���R�s�[����܂��B
+・HTTPGetlastModified()
+　文字列長がコンテンツとってみないと確定できないので
+　一度目は第2引数にNULLを指定して呼び出すことで必要な文字列長が戻ります。
+　それの分以上のメモリを確保後、第2引数にそのメモリのポインタを指定して
+　呼び出すことで日付がコピーされます。
 
-�EHTTPCleanUp()
-�@HTTPGetContents()/HTPGetContentsSync()�ō쐬���ꂽ�R���e�L�X�g��j�����܂��B
-�@�Ăяo���ȍ~�A�����̃R���e�L�X�g�͖����ɂȂ�܂��B
+・HTTPCleanUp()
+　HTTPGetContents()/HTPGetContentsSync()で作成されたコンテキストを破棄します。
+　呼び出し以降、引数のコンテキストは無効になります。
 
-�ERegexCompile()
-�@���K�\���p�^�[����^���Đ��K�\���R���e�L�X�g���쐬���܂��B
-�@�ȍ~��Regex*�͂��̃R���e�L�X�g��^���Ă��������B
-�@RegexMatcher()��HTTP*�̃n���h���Ɉˑ����Ȃ��̂ň�x�쐬���ĉ��x��
-�@RegexMatcher()�Ŏg���܂킷���Ƃ��o���܂��B
+・RegexCompile()
+　正規表現パターンを与えて正規表現コンテキストを作成します。
+　以降のRegex*はこのコンテキストを与えてください。
+　RegexMatcher()のHTTP*のハンドルに依存しないので一度作成して何度も
+　RegexMatcher()で使いまわすことが出来ます。
 
-�ERegexMatcher()
-�@Web�R���e���c�̓��e�𐳋K�\���R���e�L�X�g�̃}�b�`�p�^�[�����g���ă}�b�`
-�@��������󂯎��܂��B���̊֐����󂯎�蕶����̒������킩��Ȃ��̂�
-�@��3������NULL�ň�x�Ăяo�����AHTTPGetContentsLength()�̒���������
-�@�o�b�t�@���m�ۂ���i�x���I�I�I(��)�j���ƂőΉ����Ă��������B
+・RegexMatcher()
+　Webコンテンツの内容を正規表現コンテキストのマッチパターンを使ってマッチ
+　文字列を受け取ります。この関数も受け取り文字列の長さがわからないので
+　第3引数をNULLで一度呼び出すか、HTTPGetContentsLength()の長さ分だけ
+　バッファを確保する（富豪的！！(笑)）ことで対応してください。
 
-�ERegexterminate()
-�@RegexCompile()�ō쐬�����R���e�L�X�g��j�����܂��B
+・Regexterminate()
+　RegexCompile()で作成したコンテキストを破棄します。
 
-�EWWWTerminate()
-�@�I�������BWWWInit()�̖߂�l��^���ĂˁB
+・WWWTerminate()
+　終了処理。WWWInit()の戻り値を与えてね。
 
-����Ȋ����łЂƂ�낵���B
+こんな感じでひとつよろしく。

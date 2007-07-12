@@ -271,7 +271,7 @@ std::vector<Item> loadItems()
 		return std::vector<Item>();
 
 	char lineBuffer[4096];
-	// ƒwƒbƒ_“Ç‚İ”ò‚Î‚µ
+	// ãƒ˜ãƒƒãƒ€èª­ã¿é£›ã°ã—
 	ifs.getline(lineBuffer, sizeof(lineBuffer));
 
 	std::vector<Item> items;
@@ -440,7 +440,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 				PAINTSTRUCT ps;
 				BeginPaint(hWnd, &ps);
 				const std::string message =
-					"ƒL[‚ğ‰Ÿ‚·‚±‚Æ‚ÅÅ‘å4ƒXƒŒƒbƒh‚Ü‚Å‘‚¦‚Ü‚·B";
+					"ã‚­ãƒ¼ã‚’æŠ¼ã™ã“ã¨ã§æœ€å¤§4ã‚¹ãƒ¬ãƒƒãƒ‰ã¾ã§å¢—ãˆã¾ã™ã€‚";
 				TextOut(ps.hdc, 0, 0, message.c_str(), static_cast<int>(message.length()));
 				EndPaint(hWnd, &ps);
 
