@@ -108,7 +108,7 @@ private:
 	{
 		try 
 		{
-			HTTPClient client;
+			HTTPClient<> client;
 			client.setKeepAliveTime(300);
 			client.setUserAgent(userAgent == "" ? 
 								"Mozilla/4.0 (compatible; MSIE 6.0; "
