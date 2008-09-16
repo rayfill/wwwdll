@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 		// crc
 		std::cout << "crc: " << HTTPGetCRC32(httpContext) << std::endl;
 
-		void* filterManager = FilterManagerCreate();
+		void* filterManager = FilterManagerCreate(NULL);
 		std::cout << "filtered crc: " << 
 			HTTPGetFilteredCRC32(httpContext, filterManager) << std::endl;
 
@@ -512,7 +512,7 @@ int WINAPI WinMain(HINSTANCE hInst,
 
 	waitableThreads = threadHandler;
 
-	filterManagerContext = FilterManagerCreate();
+	filterManagerContext = FilterManagerCreate(NULL);
 
 	MSG msg;
 	while(GetMessage(&msg, NULL, 0, 0) > 0)

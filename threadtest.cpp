@@ -86,7 +86,7 @@ int main()
 // 	unsigned int filtered;
 
 // 	void* wwwContext = WWWInit();
-// 	void* filterManager = FilterManagerCreate();
+// 	void* filterManager = FilterManagerCreate(NULL);
 
 	for (int i = 0; i < contentsCount; ++i)
 	{

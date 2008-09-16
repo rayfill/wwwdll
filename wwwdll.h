@@ -262,7 +262,7 @@ extern "C"
 	 * フィルタマネージャの作成
 	 * @return フィルタマネージャコンテキストのハンドル
 	 */
-	void* CALLDECL FilterManagerCreate();
+	void* CALLDECL FilterManagerCreate(const char* filterFileName);
 
 	/**
 	 * 適合フィルタの取得

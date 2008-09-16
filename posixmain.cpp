@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 	void* handle = WWWInit();
 	std::vector<Item> items = loadItems();
 	resetItems(items);
-	void* filterManagerContext = FilterManagerCreate();
+	void* filterManagerContext = FilterManagerCreate(NULL);
 
 	std::map<void*, void*> contextMap;
 	

@@ -25,7 +25,7 @@ RegexMatcher@20
 RegexMatchFromString@20
 RegexMatchedString@20
 RegexTerminate@4
-FilterManagerCreate@0
+FilterManagerCreate@4
 FilterGetFilters@8
 FilterRemoveFilters@4
 FilterApply@8

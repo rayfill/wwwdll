@@ -694,9 +694,12 @@ void CALLDECL RegexTerminate(void* regexContext)
 
 using namespace Filter;
 
-void* CALLDECL FilterManagerCreate()
+void* CALLDECL FilterManagerCreate(const char* filterConfigFileName)
 {
-	FilterLoader loader("filter.txt");
+	if (filterConfigFileName == NULL)
+		filterConfigFileName = "filter.txt";
+
+	FilterLoader loader(filterConfigFileName);
 	FilterManager* manager = new FilterManager();
 
 	loader.load();

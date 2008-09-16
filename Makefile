@@ -3,7 +3,9 @@ CXX=g++
 DLLWRAP=dllwrap
 DLLTOOL=dlltool
 DEPENDS_DIR=./depends
+#CXXFLAGS +=-g -Wall -DWINNT_VER=0x0501 -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
 CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
+
 .PHONY: strip clean depends
 
 test: wwwdll.dll wwwdlltest
@@ -38,6 +40,6 @@ wwwdlltest: wwwdlltest.cpp libwwwdll.a
 	$(CXX) -g  -DDEBUGMAIN $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
 
 wwwdllwintest: libwwwdll.a
-	$(CXX) -g  -DDEBUGWINMAIN $(CXXFLAGS) -mwindows $(INCLUDES) -I$(DEPENDS_DIR) -Wall -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
+	$(CXX) -g  -DDEBUGWINMAIN $(CXXFLAGS) -mwindows $(INCLUDES) -I$(DEPENDS_DIR) -Wall --input-charset=UTF-8 --exec-charset=cp932 -o wwwdlltest.exe wwwdlltest.cpp -L. -lwwwdll $(LIB_PATH)  $(LIBS)
 
 
