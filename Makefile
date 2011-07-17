@@ -2,9 +2,10 @@ CXX=g++
 #CXX=g++
 DLLWRAP=dllwrap
 DLLTOOL=dlltool
-DEPENDS_DIR=./depends
+DEPENDS_DIR=../cpplib
 #CXXFLAGS +=-g -Wall -DWINNT_VER=0x0501 -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
-CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
+CXXFLAGS +=-g -Wall -D_WIN32_WINNT=0x0501 -D_REENTRANT 
+LIBS += -lz
 
 .PHONY: strip clean depends
 

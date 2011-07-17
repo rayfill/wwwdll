@@ -1,0 +1,15 @@
+CXX=g++
+#CXX=g++
+DLLWRAP=dllwrap
+DLLTOOL=dlltool
+DEPENDS_DIR=../cpplib
+#CXXFLAGS +=-g -Wall -DWINNT_VER=0x0501 -D_WIN32_WINNT=0x0501 -D_REENTRANT -mthreads
+CXXFLAGS +=-g -std=c++0x -Wall -D_WIN32_WINNT=0x0501 -D_REENTRANT 
+LIBS += -lz -lpthread
+
+test.exe: testmain.o
+	$(CXX) -o test.exe testmain.o $(LIBS)
+
+testmain.o: testmain.cpp
+	$(CXX) -DNDEBUG -Wall $(CXXFLAGS) $(INCLUDES) -I$(DEPENDS_DIR) -c testmain.cpp
+

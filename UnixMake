@@ -1,5 +1,5 @@
 #DEPENDS_PATH=$(DEPENDS_PATH)
-DEPENDS_PATH=-I../cpp_lib
+DEPENDS_PATH=-I../cpplib
 TARGET=libwwwdll.so
 FILTERTEST=filterTest
 TEST=posixtest
@@ -19,4 +19,4 @@ $(TARGET): wwwdll.cpp wwwdll.h Filter.hpp
 	$(CXX) -g -fPIC -Wall -D_REENTRANT -shared -o libwwwdll.so $(DEPENDS_PATH) wwwdll.cpp -lpthread
 
 $(TEST): posixmain.cpp $(TARGET)
-	$(CXX) -g -Wall -Weffc++ $(DEPENDS_PATH) -o $(TEST) posixmain.cpp -L. -lwwwdll
+	$(CXX) -g -stdc++=0x -Wall -Weffc++ $(DEPENDS_PATH) -o $(TEST) posixmain.cpp -L. -lwwwdll

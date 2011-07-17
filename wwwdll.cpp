@@ -3,10 +3,12 @@
 #include <Thread/RerunnableThread.hpp>
 #include <text/regex/RegexCompile.hpp>
 #include "Filter.hpp"
+#include "DeflateHTTPResult.hpp"
 
 #include <cassert>
 #include <fstream>
 #include "wwwdll.h"
+#include <map>
 
 
 typedef RerunnableThread thread_t;
@@ -100,7 +102,7 @@ private:
 	std::string proxyUser;
 	std::string proxyPass;
 	const long timeout;
-	HTTPResult<> result;
+	DeflateHTTPResult<> result;
 	thread_t* threadContext;
 	AfterFunctor functor;
 
@@ -108,14 +110,14 @@ private:
 	{
 		try 
 		{
-			HTTPClient<> client;
+			HTTPClient<DeflateHTTPResult<> > client;
 			client.setKeepAliveTime(300);
 			client.setUserAgent(userAgent == "" ? 
 								"Mozilla/4.0 (compatible; MSIE 6.0; "
 								"Windows NT 5.1; SV1; .NET CLR 1.0.3705; "
 								".NET CLR 1.1.4322)" :
 								userAgent.c_str());
-			client.setAcceptEncoding("");
+			client.setAcceptEncoding("gzip");
 			client.addAcceptLanguage("ja");
 			client.addAcceptLanguage("en");
 			if (cookie != "")
@@ -157,6 +159,11 @@ public:
 	std::string getLastModified() const
 	{
 		return result.getResponseHeaders().get("Last-Modified");
+	}
+
+	std::string getResponseHeaders() const
+	{
+		return result.getResponseHeaders().toString();
 	}
 
 	long getCRC32() const
